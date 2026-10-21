@@ -105,6 +105,26 @@ class ExecutionRecordORM(Base):
     error_message: Mapped[str | None]
 
 
+class TokenBlacklistORM(Base):
+    """Phase 12 — revoked JWT refresh tokens (or any token by jti).
+
+    We store the jti (token id claim) + exp so we can purge expired rows.
+    Signature verification still happens in decode_token(); this is an
+    ADDITIONAL check after HS256 passes, so revoked tokens are rejected even
+    before we inspect role / exp.
+    """
+
+    __tablename__ = "token_blacklist"
+
+    jti_hash: Mapped[str] = mapped_column(primary_key=True, index=True)  # sha256(jti) — never store raw
+    jti: Mapped[str] = mapped_column(index=True)
+    subject: Mapped[str]
+    exp_at: Mapped[str | None]         # ISO-8601 expiry — may be None if revocation not tied to exp
+    revoked_at: Mapped[str]           # ISO-8601 now
+    reason: Mapped[str | None]
+    revoked_by: Mapped[str | None]
+
+
 # ---- Engine / session factories ------------------------------------------
 
 _engine: AsyncEngine | None = None

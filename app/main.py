@@ -61,6 +61,13 @@ async def lifespan(api: FastAPI):
                 await store.dump(feedback_summary(), kind="shutdown", note="app shutdown")
             except Exception as e:
                 _logger.warning("[MetricsStore] shutdown dump failed: %s", e)
+        # Phase 12: VictoriaMetrics remote-write
+        if get_settings().vm_remote_write_url:
+            try:
+                from app.adapters.remote_write.victoria import push_latest
+                await push_latest()
+            except Exception as e:
+                _logger.warning("[VM remote-write] shutdown push failed: %s", e)
 
 
 def create_app() -> FastAPI:

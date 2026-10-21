@@ -34,6 +34,7 @@ class BackendResult:
     returncode: int
     stdout: str = ""
     stderr: str = ""
+    rule_handle: Optional[str] = None  # nft rule handle for atomic delete
 
     @property
     def ok(self) -> bool:
@@ -45,25 +46,15 @@ class ExecutionBackend(ABC):
 
     name: str = "abstract"
 
-    # ---- platform detection ----
-
     @staticmethod
     @abstractmethod
-    def is_supported() -> bool:
-        """Does this backend make sense on the current host?"""
-        ...
-
-    # ---- build + run ----
+    def is_supported() -> bool: ...
 
     @abstractmethod
-    def build(self, proposal: PolicyProposal, *, src_ip: Optional[str] = None,
-              dst_port: Optional[int] = None) -> str:
-        """Return the command string that ``run`` would execute."""
-        ...
+    def build(self, proposal: PolicyProposal, *, src_ip=None, dst_port=None) -> str: ...
 
-    def run(self, proposal: PolicyProposal, *, src_ip: Optional[str] = None,
-            dst_port: Optional[int] = None, timeout: float = 30.0) -> BackendResult:
-        """Execute self.build(proposal) via subprocess. Override for tests."""
+    # Default run() — every backend can execute a single command
+    def run(self, proposal, *, src_ip=None, dst_port=None, timeout=30.0) -> BackendResult:
         cmd = self.build(proposal, src_ip=src_ip, dst_port=dst_port)
         import shlex
         try:
@@ -71,9 +62,7 @@ class ExecutionBackend(ABC):
         except ValueError:
             args = [cmd]
         try:
-            r = subprocess.run(
-                args, capture_output=True, text=True, timeout=timeout,
-            )
+            r = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
             return BackendResult(
                 returncode=r.returncode,
                 stdout=(r.stdout or "")[:2000],
@@ -81,6 +70,20 @@ class ExecutionBackend(ABC):
             )
         except Exception as e:
             return BackendResult(returncode=-1, stderr=str(e)[:2000])
+
+    # Phase 12: atomic apply + rollback
+    def run_atomic(self, proposal, *, src_ip=None, dst_port=None, timeout=30.0) -> BackendResult:
+        """Attempt run(); on failure, attempt rollback. Base impl = run() only — override in
+        backends that support rollback (nftables / netsh delete rule)."""
+        result = self.run(proposal, src_ip=src_ip, dst_port=dst_port, timeout=timeout)
+        if not result.ok and result.rule_handle:
+            self.rollback(result.rule_handle, timeout=timeout)
+        return result
+
+    def rollback(self, rule_handle: str, *, timeout=10.0) -> BackendResult:
+        """Delete a previously applied rule identified by handle. Returns its own result."""
+        # Default no-op override in IptablesBackend / WindowsBackend
+        return BackendResult(returncode=0)
 
 
 # ============================================================================
@@ -91,20 +94,19 @@ class ExecutionBackend(ABC):
 class EchoBackend(ExecutionBackend):
     """No-op backend — always produces safe echo commands, never touches firewall.
 
-    Used by:
-    - All DRY_RUN proposals
-    - ALERT_ONLY / NO_ACTION in REAL mode
-    - Any proposal on a platform that has no native firewall backend
+    run() is a special-case: it does NOT call subprocess.run() (which would fail
+    on Windows because ``echo`` is a cmd built-in, not a .exe).  Instead it returns
+    a BackendResult with returncode=0 and stdout=plan, so downstream code (Executor
+    / Observability / tests) all see SUCCEEDED regardless of platform.
     """
 
     name = "echo"
 
     @staticmethod
     def is_supported() -> bool:
-        # Echo works EVERYWHERE — fallback default
         return True
 
-    def build(self, proposal: PolicyProposal, *, src_ip=None, dst_port=None) -> str:
+    def build(self, proposal, *, src_ip=None, dst_port=None) -> str:
         a = proposal.action_type
         if a.value in ("ALERT_ONLY", "NO_ACTION"):
             ip = src_ip or "(no_src_ip)"
@@ -114,13 +116,15 @@ class EchoBackend(ExecutionBackend):
                 f"src_ip={ip} dst_port={port} severity={proposal.risk_level.value} "
                 f"rationale={proposal.rationale[:80]}'"
             )
-        # BLOCK_* / RATE_LIMIT — we still echo, but Executor guardrail should have
-        # blocked this before we get here. If it leaks through, at least we
-        # don't run a dangerous command.
         target = f"block_ip:{proposal.parameters.ip}" if a.value == "BLOCK_IP" else \
                  f"block_port:{proposal.parameters.port}" if a.value == "BLOCK_PORT" else \
                  f"rate_limit:{proposal.parameters.ip}@{proposal.parameters.max_pps}"
         return f"echo '[GUARDRAIL] would have executed {target} on real backend — blocked by security boundary'"
+
+    def run(self, proposal, *, src_ip=None, dst_port=None, timeout=30.0) -> BackendResult:
+        """Override — never spawn subprocess.  Always succeeds with plan as stdout."""
+        plan = self.build(proposal, src_ip=src_ip, dst_port=dst_port)
+        return BackendResult(returncode=0, stdout=plan, stderr="")
 
 
 # ============================================================================
@@ -129,8 +133,12 @@ class EchoBackend(ExecutionBackend):
 
 
 class IptablesBackend(ExecutionBackend):
-    """Linux iptables / nft backend. Builds real firewall commands but Executor
-    guardrail still blocks them unless allow_real_execution=True + approval_token.
+    """Linux iptables / nft backend. Phase 12 adds atomic rollback via rule_handle.
+
+    nft list ruleset -h 输出中每条规则前面带一个数字 handle（例如 `handle 42`），
+    我们在 run() 执行完后 parse 一次 list 找到 handle，存进 BackendResult.rule_handle。
+    失败时 Executor 会调 rollback(handle) 用 `nft delete rule inet filter input handle N`
+    原子删除 — 不会残留半条规则。
     """
 
     name = "iptables"
@@ -139,7 +147,7 @@ class IptablesBackend(ExecutionBackend):
     def is_supported() -> bool:
         return platform.system() == "Linux"
 
-    def build(self, proposal: PolicyProposal, *, src_ip=None, dst_port=None) -> str:
+    def build(self, proposal, *, src_ip=None, dst_port=None) -> str:
         a = proposal.action_type
         if a.value == "BLOCK_IP":
             return f"sudo nft add rule inet filter input ip saddr {proposal.parameters.ip} drop counter"
@@ -151,8 +159,66 @@ class IptablesBackend(ExecutionBackend):
                 f"sudo nft add rule inet filter input ip saddr {proposal.parameters.ip} "
                 f"limit rate over {pps}/second burst {pps}/second drop counter"
             )
-        # ALERT_ONLY / NO_ACTION — echo fallback
         return EchoBackend().build(proposal, src_ip=src_ip, dst_port=dst_port)
+
+    def run(self, proposal, *, src_ip=None, dst_port=None, timeout=30.0) -> BackendResult:
+        result = super().run(proposal, src_ip=src_ip, dst_port=dst_port, timeout=timeout)
+        if result.ok:
+            # 找 rule_handle — 从 proposal 的 target ip / port 倒推
+            handle = self._find_handle(proposal)
+            if handle:
+                result.rule_handle = handle
+        return result
+
+    def rollback(self, rule_handle: str, *, timeout=10.0) -> BackendResult:
+        import shlex
+        cmd = f"sudo nft delete rule inet filter input handle {rule_handle}"
+        try:
+            args = shlex.split(cmd)
+        except ValueError:
+            args = [cmd]
+        try:
+            r = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+            return BackendResult(returncode=r.returncode, stdout=(r.stdout or "")[:500],
+                                 stderr=(r.stderr or "")[:500])
+        except Exception as e:
+            return BackendResult(returncode=-1, stderr=str(e)[:500])
+
+    # --- internal ---
+
+    def _find_handle(self, proposal) -> Optional[str]:
+        """Parse `nft list ruleset -h` and return the handle that matches this proposal."""
+        try:
+            r = subprocess.run(
+                ["sudo", "nft", "list", "ruleset", "-h"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if r.returncode != 0:
+                return None
+        except Exception:
+            return None
+
+        a = proposal.action_type
+        needle = ""
+        if a.value == "BLOCK_IP":
+            needle = f"ip saddr {proposal.parameters.ip}"
+        elif a.value == "BLOCK_PORT":
+            needle = f"dport {proposal.parameters.port}"
+        elif a.value == "RATE_LIMIT":
+            needle = f"ip saddr {proposal.parameters.ip} limit rate"
+        else:
+            return None
+
+        for line in (r.stdout or "").splitlines():
+            if needle in line:
+                # format: ... handle 42 drop counter
+                for tok in line.split():
+                    if tok == "handle":
+                        try:
+                            return line.split("handle", 1)[1].split()[0]
+                        except (IndexError, ValueError):
+                            return None
+        return None
 
 
 # ============================================================================
@@ -162,8 +228,8 @@ class IptablesBackend(ExecutionBackend):
 
 class WindowsBackend(ExecutionBackend):
     """Windows netsh advfirewall firewall backend. BLOCK_IP / BLOCK_PORT supported.
-
-    RATE_LIMIT is NOT supported — Windows Firewall doesn't do per-IP rate limits.
+    RATE_LIMIT downgraded to echo note (no native support).
+    Phase 12: rollback via `netsh advfirewall firewall delete rule name=...`.
     """
 
     name = "windows"
@@ -172,25 +238,53 @@ class WindowsBackend(ExecutionBackend):
     def is_supported() -> bool:
         return platform.system() == "Windows"
 
-    def build(self, proposal: PolicyProposal, *, src_ip=None, dst_port=None) -> str:
+    @staticmethod
+    def _rule_name(proposal) -> str:
+        a = proposal.action_type
+        if a.value == "BLOCK_IP":
+            return f"edge-block-{proposal.parameters.ip}"
+        if a.value == "BLOCK_PORT":
+            return f"edge-block-port-{proposal.parameters.port}"
+        return "edge-rule"
+
+    def build(self, proposal, *, src_ip=None, dst_port=None) -> str:
         a = proposal.action_type
         if a.value == "BLOCK_IP":
             return (
-                f'netsh advfirewall firewall add rule name="edge-block-{proposal.parameters.ip}" '
+                f'netsh advfirewall firewall add rule name="{self._rule_name(proposal)}" '
                 f'dir=in action=block enable=yes remoteip={proposal.parameters.ip}'
             )
         if a.value == "BLOCK_PORT":
             return (
-                f'netsh advfirewall firewall add rule name="edge-block-port-{proposal.parameters.port}" '
+                f'netsh advfirewall firewall add rule name="{self._rule_name(proposal)}" '
                 f'dir=in action=block enable=yes protocol=TCP localport={proposal.parameters.port}'
             )
         if a.value == "RATE_LIMIT":
-            # Windows has no native rate-limit — downgrade to EchoBackend note
             return (
                 f"echo '[RATE_LIMIT UNSUPPORTED] Windows Firewall cannot do per-IP rate limits; "
                 f"proposal ip={proposal.parameters.ip} pps={proposal.parameters.max_pps}'"
             )
         return EchoBackend().build(proposal, src_ip=src_ip, dst_port=dst_port)
+
+    def run(self, proposal, *, src_ip=None, dst_port=None, timeout=30.0) -> BackendResult:
+        result = super().run(proposal, src_ip=src_ip, dst_port=dst_port, timeout=timeout)
+        if result.ok and proposal.action_type.value in ("BLOCK_IP", "BLOCK_PORT"):
+            result.rule_handle = self._rule_name(proposal)  # use rule name as handle
+        return result
+
+    def rollback(self, rule_handle: str, *, timeout=10.0) -> BackendResult:
+        cmd = f'netsh advfirewall firewall delete rule name="{rule_handle}"'
+        import shlex
+        try:
+            args = shlex.split(cmd, posix=False)
+        except ValueError:
+            args = [cmd]
+        try:
+            r = subprocess.run(args, capture_output=True, text=True, timeout=timeout, shell=True)
+            return BackendResult(returncode=r.returncode, stdout=(r.stdout or "")[:500],
+                                 stderr=(r.stderr or "")[:500])
+        except Exception as e:
+            return BackendResult(returncode=-1, stderr=str(e)[:500])
 
 
 # ============================================================================

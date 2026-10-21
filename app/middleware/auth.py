@@ -58,17 +58,27 @@ def _verify(msg: bytes, sig: bytes, secret: str) -> bool:
 # ---- token API ------------------------------------------------------------
 
 
-def create_token(subject: str, *, extra: Optional[Dict[str, Any]] = None) -> str:
-    """生成一个 HS256 token。默认 ttl 从 Settings 取。"""
+def create_token(subject: str, *, extra: Optional[Dict[str, Any]] = None,
+                 token_type: str = "access") -> str:
+    """生成一个 HS256 token。默认 ttl 从 Settings 取。
+
+    ``token_type="refresh"`` 时 ttl 自动 * 7。
+    """
     s = get_settings()
     if not s.auth_jwt_secret:
         raise RuntimeError("auth_jwt_secret is empty — cannot create tokens")
+    from hashlib import sha256
+    from app.domain.common import _new_id
     header = {"alg": "HS256", "typ": "JWT"}
     now = datetime.now(timezone.utc)
+    ttl_minutes = s.auth_token_ttl_minutes * 7 if token_type == "refresh" else s.auth_token_ttl_minutes
+    jti = _new_id("jti")
     payload: Dict[str, Any] = {
         "sub": subject,
         "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(minutes=s.auth_token_ttl_minutes)).timestamp()),
+        "exp": int((now + timedelta(minutes=ttl_minutes)).timestamp()),
+        "jti": jti,
+        "type": token_type,
     }
     if extra:
         payload.update(extra)
@@ -79,8 +89,13 @@ def create_token(subject: str, *, extra: Optional[Dict[str, Any]] = None) -> str
     return f"{h}.{p}.{sig}"
 
 
+def create_refresh_token(subject: str, *, extra: Optional[Dict[str, Any]] = None) -> str:
+    """Long-lived refresh token (ttl = access ttl * 7)."""
+    return create_token(subject, extra=extra, token_type="refresh")
+
+
 def decode_token(token: str) -> Dict[str, Any]:
-    """验证签名 + 过期时间，返回 payload。HTTPException on failure."""
+    """验证签名 + 过期时间 + 黑名单检查，返回 payload。HTTPException on failure."""
     s = get_settings()
     if not s.auth_jwt_secret:
         raise HTTPException(status_code=500, detail="auth_jwt_secret not configured")
@@ -90,11 +105,10 @@ def decode_token(token: str) -> Dict[str, Any]:
         raise HTTPException(status_code=401, detail="invalid token format")
 
     h_b64, p_b64, sig_b64 = parts
-    msg = f"{h_b64}.{p_b64}".encode()
 
     try:
         sig = _b64url_decode(sig_b64)
-        if not _verify(msg, sig, s.auth_jwt_secret):
+        if not _verify(f"{h_b64}.{p_b64}".encode(), sig, s.auth_jwt_secret):
             raise HTTPException(status_code=401, detail="token signature invalid")
     except HTTPException:
         raise
@@ -110,7 +124,74 @@ def decode_token(token: str) -> Dict[str, Any]:
     if exp and exp < int(time.time()):
         raise HTTPException(status_code=401, detail="token expired")
 
+    # Phase 12: blacklist check
+    jti = payload.get("jti")
+    if jti and _is_blacklisted_sync(jti):
+        raise HTTPException(status_code=401, detail="token revoked")
+
     return payload
+
+
+# ---- Blacklist helpers (Phase 12) ------------------------------------------
+
+
+def _is_blacklisted_sync(jti: str) -> bool:
+    """同步黑名单查询：decode_token 是同步函数，用 sqlite3 直接开一个临时 connection。
+    不走 SQLAlchemy async_sessionmaker，避免 sync/async context 混乱。"""
+    try:
+        from app.core.config import REPO_ROOT
+        db_path = REPO_ROOT / "data" / "app.db"
+        if not db_path.exists():
+            return False
+        import sqlite3
+        conn = sqlite3.connect(str(db_path))
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,))
+        hit = cur.fetchone() is not None
+        conn.close()
+        return hit
+    except Exception as e:
+        logger.warning("blacklist lookup failed: %s", e)
+        return False
+
+
+async def blacklist_token(jti: str, *, subject: str = "", reason: Optional[str] = None,
+                          revoked_by: Optional[str] = None) -> None:
+    """Add a jti to the blacklist table (async, SQLAlchemy)."""
+    from hashlib import sha256
+    from datetime import datetime, timezone
+    from sqlalchemy import text
+    from app.core.database import get_session_factory
+
+    jti_hash = sha256(jti.encode()).hexdigest()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    factory = get_session_factory()
+    async with factory() as s:
+        await s.execute(
+            text(
+                "INSERT OR REPLACE INTO token_blacklist "
+                "(jti_hash, jti, subject, exp_at, revoked_at, reason, revoked_by) "
+                "VALUES (:jh, :j, :sub, :exp, :rv, :r, :by)"
+            ),
+            {"jh": jti_hash, "j": jti, "sub": subject, "exp": None,
+             "rv": now_iso, "r": reason or "", "by": revoked_by or ""},
+        )
+        await s.commit()
+
+
+async def purge_expired_blacklist(*, retention_days: int = 7) -> int:
+    """Delete blacklist rows older than ``retention_days``."""
+    from sqlalchemy import text
+    from app.core.database import get_session_factory
+    factory = get_session_factory()
+    async with factory() as s:
+        r = await s.execute(
+            text(
+                "DELETE FROM token_blacklist WHERE revoked_at < datetime('now', :offset)"
+            ).bindparams(offset=f"-{retention_days} days")
+        )
+        await s.commit()
+        return int(r.rowcount or 0)
 
 
 # ---- FastAPI dependency ---------------------------------------------------

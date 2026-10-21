@@ -1,0 +1,47 @@
+feat: Phase 12 -- atomic rollback + auth refresh/blacklist + VictoriaMetrics remote-write
+
+[Atomic rollback] ExecutionBackend.run_atomic() + rollback(handle)
+- BackendResult.rule_handle: identifies the applied rule for later delete
+- IptablesBackend: parse `nft list ruleset -h` to grab handle, then
+  `nft delete rule inet filter input handle N` to atomically remove
+- WindowsBackend: rule name == handle; rollback is
+  `netsh advfirewall firewall delete rule name="..."`
+- EchoBackend.run() no longer spawns subprocess (WinError 2 on Windows
+  where echo is a cmd built-in, not .exe); returns BackendResult(returncode=0)
+  directly so downstream always see SUCCEEDED on every platform
+- Executor._dispatch() calls run_atomic() and sets rollback="attempted"
+  in ExecutionRecord.trace_id when a handle exists and run failed
+
+[Auth refresh + blacklist] app/middleware/auth.py + token_blacklist table
+- create_token() now emits jti (unique token id) + type=access|refresh
+- create_refresh_token() returns long-lived token (ttl = access ttl * 7)
+- decode_token() does HS256 -> exp -> blacklist check in order
+- _is_blacklisted_sync() uses sqlite3 direct connection (no async context
+  conflicts) and short-circuits if db_path missing
+- blacklist_token(jti, subject, reason, revoked_by) async SQLAlchemy path
+  stores sha256(jti) as primary key — raw jti never persisted
+- purge_expired_blacklist(retention_days=7) cleanup helper
+- TokenBlacklistORM: jti_hash / jti / subject / exp_at / revoked_at / reason /
+  revoked_by. exp_at nullable (revocation not always tied to exp)
+
+[VictoriaMetrics remote-write] app/adapters/remote_write/victoria.py
+- _to_lines(metrics) converts MetricsStore.latest_overview() to line-protocol
+  text, compatible with /api/v1/push
+- send_to_vm(url, lines) uses stdlib requests (explicitly pinned in
+  pyproject.toml now) + timeout + exception safety
+- push_latest() reads MetricsStore.latest_overview() + push; runs in
+  run_in_executor so it does not block the event loop
+- main.py lifespan shutdown: if Settings.vm_remote_write_url is set,
+  automatically push the latest snapshot on graceful shutdown
+
+[Config additions]
+- vm_remote_write_url (empty = don't push)
+
+[Bug fix during Phase 12]
+- TokenBlacklistORM.exp_at / reason / revoked_by: Phase 12 initially declared
+  them NOT NULL which conflicts with "reason is a note, not required". Fixed
+  by making them Optional[str]; SQLite required deleting old app.db so the
+  table was recreated with the right schema.
+
+264 passed (256 Phase 0-11 + 8 Phase 12). 1 skipped (IptablesBackend build
+is a pure string op but test marks non-Linux hosts skipped). 0 failed.

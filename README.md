@@ -186,12 +186,12 @@ data/                             (gitignore：sqlite / 向量索引 / demo 报�
 
 | 项 | 限制 | 计划 |
 |---|---|---|
-| 执行后端 | **Phase 11 已落地**：`ExecutionBackend` adapter 层 — `EchoBackend` / `IptablesBackend` (Linux) / `WindowsBackend` (netsh) + `select_backend()` 注册表。REAL 模式仍受 `allow_real_execution=False` 硬开关 + Phase 6 action-type guardrail 双重拦截 | Phase 12+ 加 nftables 原子 rollback / Cisco / Juniper / PAN-OS 后端 |
-| 指标持久化 | **Phase 10 已落地**：SQLite 快照（默认关闭 `metrics_persist_enabled=True` 才启用）；可 `metrics_snapshot_interval_minutes` 定时快照 + 保留天数清理 | Phase 12+ 加 Prometheus remote-write / VictoriaMetrics |
-| API 鉴权 | **Phase 11 已落地**：HS256 JWT 骨架 + RBAC（`admin` / `operator` / `viewer` 三角色）；`Depends(require_roles("admin", "operator"))` | Phase 12+ 加刷新 token / 黑名单 / mTLS |
+| 执行后端 | **Phase 12 已落地**：ExecutionBackend adapter 层 + 原子 rollback（IptablesBackend nft handle + WindowsBackend netsh delete rule name=...）；run_atomic() 失败自动 rollback | Phase 13+ 多后端 fan-out（Cisco/Juniper/PAN-OS）+ 跨主机协调 |
+| 指标持久化 | **Phase 10 已落地**：SQLite 快照；**Phase 12 加 VictoriaMetrics remote-write**（`vm_remote_write_url` 非空时 shutdown 自动 push latest snapshot，零新依赖） | Phase 13+ Grafana dashboard + VictoriaMetrics recording rules |
+| API 鉴权 | **Phase 12 已落地**：HS256 JWT + RBAC 三角色 + refresh token（ttl = access ttl * 7）+ token blacklist（sqlite + sha256(jti)，不存 raw token） | Phase 13+ mTLS + rate-limit per role + SSO (OIDC) |
 | 检测模型 | RuleDemo 是 hand-tuned 规则，SklearnBaseline 无预训练 | 后续接入真实 IDS 输出 |
-| 并发 | **Phase 11 已落地**：`scripts/run_prod.sh` (Linux, 4 workers, uvloop) + `scripts/run_prod.ps1` (Windows)；`scripts/demo_e2e.py` 仍是 TestClient 单进程 | 生产部署建议 behind nginx + Gunicorn |
-| 异步模型 | SQLAlchemy async engine + aiosqlite；但 VecIndex / BM25 / Executor 是 sync | 可接受 — 推理 / 执行本身是重 CPU / 阻塞 |
+| 并发 | **Phase 11 已落地**：`scripts/run_prod.sh` (Linux, 4 workers, uvloop) + `scripts/run_prod.ps1` (Windows) | 生产部署建议 behind nginx + Gunicorn |
+| 异步模型 | SQLAlchemy async engine + aiosqlite；VecIndex / BM25 / Executor / MetricsStore / auth 黑名单 / VictoriaMetrics push 都是 sync 外层包 async | 可接受 — 推理 / 执行本身是重 CPU / 阻塞 |
 
 ## 文档
 

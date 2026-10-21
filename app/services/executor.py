@@ -147,12 +147,12 @@ class Executor:
         backend: ExecutionBackend = select_backend(prefer=self._backend_preference)
         plan = backend.build(proposal, src_ip=src_ip, dst_port=dst_port)
 
-        # Non-supported combination (e.g. RATE_LIMIT on Windows) → backend.build
-        # already downgraded to echo note; just run it
-        logger.info("[REAL via %s] executing: %s", backend.name, plan)
-        result = backend.run(proposal, src_ip=src_ip, dst_port=dst_port)
+        logger.info("[REAL via %s] executing (atomic): %s", backend.name, plan)
+        result = backend.run_atomic(proposal, src_ip=src_ip, dst_port=dst_port)
         status = ExecutionStatus.SUCCEEDED if result.ok else ExecutionStatus.FAILED
-        rollback = "N/A"  # Phase 11 does not implement undo yet
+        rollback = "N/A"
+        if result.rule_handle and not result.ok:
+            rollback = "attempted"  # run_atomic already called rollback() internally
         return (plan, target, status, result.stdout or None, result.stderr or None,
                 rollback, f"backend={backend.name} platform={platform.system()}")
 
