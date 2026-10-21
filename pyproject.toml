@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edge-security-system"
+version = "0.1.0"
+description = "Edge network security situational awareness and adaptive defense prototype (RAG + lightweight AI)."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.2",
+    "pydantic-settings>=2.5.2",
+    "SQLAlchemy>=2.0.35",
+    "aiosqlite>=0.20.0",
+    "python-multipart>=0.0.9",
+    "python-dotenv>=1.2.4",
+    "cryptography>=50.0.1",
+    "orjson>=3.12.0",
+    "psutil>=7.2.2",
+    "polars>=1.44.0",
+    "scikit-learn>=1.9.1",
+    "numpy>=2.5.0",
+    "scipy>=1.18.0",
+    "sqlite-vec>=0.1.9",
+]
+
+[project.optional-dependencies]
+llm = [
+    "ollama>=0.6.0",
+    "sentence-transformers>=6.1.0",
+    "transformers>=5.19.0",
+    "torch>=2.14.0",
+]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.4.0",
+    "httpx>=0.27.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
