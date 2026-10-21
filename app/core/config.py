@@ -47,7 +47,12 @@ class Settings(BaseSettings):
     embedding_provider: str = "ollama"  # ollama | mock
     embedding_model: str = "nomic-embed-text"
 
-    # --- Security boundary ---
+    # --- Observability / auth ---
+    auth_enabled: bool = False  # 默认关闭；生产部署时 True
+    auth_jwt_secret: str = ""   # HMAC HS256 secret — 空字符串时 auth_enabled 必须 False
+    auth_token_ttl_minutes: int = 60
+    metrics_persist_enabled: bool = False  # 默认关闭；显式 True 才在 shutdown 自动 dump
+    metrics_snapshot_interval_minutes: int = 0  # 后台定时快照（0 = 仅 shutdown，需 metrics_persist_enabled=True）
     authorized_assets: List[str] = Field(
         default_factory=lambda: ["127.0.0.0/8"],
         description="CIDR ranges that are authorized for dry-run simulation only.",
