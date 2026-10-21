@@ -24,7 +24,7 @@ class FlowRepository:
         for f in flows:
             rows.append(FlowRecordORM(
                 flow_id=f.flow_id,
-                created_at=f.created_at.isoformat(),
+                created_at=f.timestamp.isoformat(),
                 src_ip=f.src_ip,
                 dst_ip=f.dst_ip,
                 src_port=f.src_port,

@@ -1,9 +1,9 @@
 {
   "meta": {
-    "generated_at_utc": "2026-10-21T13:39:21.546315+00:00",
+    "generated_at_utc": "2026-10-21T14:00:17.526658+00:00",
     "runner_host": "HUAWEI",
     "runner_system": "Windows",
-    "repo_head": "0e97567",
+    "repo_head": "3f98fd9",
     "harness_version": "phase13-edge-benchmark"
   },
   "host": {
@@ -14,13 +14,13 @@
       "platform_system": "Windows",
       "platform_release": "11",
       "kernel_version": "10.0.26200",
-      "psutil_cpu_freq_mhz": 1900.0,
-      "psutil_cpu_percent": 36.6
+      "psutil_cpu_freq_mhz": 1504.0,
+      "psutil_cpu_percent": 17.8
     },
     "memory": {
       "psutil_total_bytes": 34070585344,
-      "psutil_available_bytes": 8712105984,
-      "psutil_percent": 74.4
+      "psutil_available_bytes": 5630210048,
+      "psutil_percent": 83.5
     },
     "thermal": {},
     "network": {
@@ -71,8 +71,8 @@
       ],
       "pernic_io": {
         "u1s1cloud": {
-          "bytes_sent": 1845367725,
-          "bytes_recv": 1845045888
+          "bytes_sent": 1850813577,
+          "bytes_recv": 1850337920
         },
         "本地连接* 3": {
           "bytes_sent": 0,
@@ -83,8 +83,8 @@
           "bytes_recv": 0
         },
         "WLAN": {
-          "bytes_sent": 96881688,
-          "bytes_recv": 3423853772
+          "bytes_sent": 118089411,
+          "bytes_recv": 3457496893
         },
         "蓝牙网络连接": {
           "bytes_sent": 0,
@@ -98,9 +98,9 @@
     },
     "disk": {
       "repo_total_bytes": 786146783232,
-      "repo_used_bytes": 435840262144,
-      "repo_free_bytes": 350306521088,
-      "write_4k_fsync_ms": 10.541299998294562
+      "repo_used_bytes": 435868762112,
+      "repo_free_bytes": 350278021120,
+      "write_4k_fsync_ms": 13.940900040324777
     },
     "accelerators": {
       "python_torch": "installed",
@@ -163,161 +163,161 @@
   },
   "import_profile": [
     {
-      "before": 20344832,
-      "after": 85635072,
-      "delta": 65290240,
+      "before": 20402176,
+      "after": 85393408,
+      "delta": 64991232,
       "module": "app.main",
       "description": "FastAPI app + lifespan"
     },
     {
       "before": 20459520,
-      "after": 64217088,
-      "delta": 43757568,
+      "after": 64409600,
+      "delta": 43950080,
       "module": "app.core.database",
       "description": "SQLAlchemy engine + ORMs"
     },
     {
-      "before": 20406272,
-      "after": 53678080,
-      "delta": 33271808,
+      "before": 20426752,
+      "after": 53846016,
+      "delta": 33419264,
       "module": "app.services.rag_service",
       "description": "RAG orchestrator (pulls llm + retrieval)"
     },
     {
-      "before": 20385792,
-      "after": 45494272,
-      "delta": 25108480,
+      "before": 20365312,
+      "after": 45465600,
+      "delta": 25100288,
       "module": "app.adapters.llm.base",
       "description": "LLM adapters (ollama client)"
     },
     {
-      "before": 20418560,
-      "after": 36818944,
-      "delta": 16400384,
+      "before": 20377600,
+      "after": 36605952,
+      "delta": 16228352,
       "module": "app.core.config",
       "description": "config + Settings"
     },
     {
-      "before": 20418560,
-      "after": 35934208,
-      "delta": 15515648,
-      "module": "app.domain.policy",
-      "description": "policy Pydantic schemas"
-    },
-    {
-      "before": 20422656,
-      "after": 35872768,
-      "delta": 15450112,
+      "before": 20357120,
+      "after": 35971072,
+      "delta": 15613952,
       "module": "app.adapters.backends",
       "description": "firewall backend registry"
     },
     {
-      "before": 20369408,
-      "after": 35753984,
-      "delta": 15384576,
+      "before": 20418560,
+      "after": 35971072,
+      "delta": 15552512,
+      "module": "app.domain.policy",
+      "description": "policy Pydantic schemas"
+    },
+    {
+      "before": 20262912,
+      "after": 35573760,
+      "delta": 15310848,
       "module": "app.domain.evidence",
       "description": "Evidence schema"
     },
     {
-      "before": 20402176,
-      "after": 35500032,
-      "delta": 15097856,
-      "module": "app.domain.execution",
-      "description": "ExecutionRecord schema"
-    },
-    {
-      "before": 20410368,
-      "after": 35221504,
-      "delta": 14811136,
+      "before": 20230144,
+      "after": 35348480,
+      "delta": 15118336,
       "module": "app.domain.common",
       "description": "domain.common enums"
     },
     {
       "before": 20365312,
-      "after": 35065856,
-      "delta": 14700544,
+      "after": 35344384,
+      "delta": 14979072,
+      "module": "app.domain.execution",
+      "description": "ExecutionRecord schema"
+    },
+    {
+      "before": 20389888,
+      "after": 35049472,
+      "delta": 14659584,
       "module": "app.adapters.embedding.base",
       "description": "embedding adapters"
     },
     {
-      "before": 20496384,
-      "after": 34746368,
-      "delta": 14249984,
+      "before": 20430848,
+      "after": 34607104,
+      "delta": 14176256,
       "module": "app.services.retrieval",
       "description": "VecIndex + BM25 + RRF"
     },
     {
-      "before": 20402176,
-      "after": 21901312,
-      "delta": 1499136,
+      "before": 20197376,
+      "after": 21745664,
+      "delta": 1548288,
       "module": "app.core.logging",
       "description": "logging setup"
     }
   ],
   "demo_e2e": {
-    "wall_clock_ms": 37225.11459997622,
+    "wall_clock_ms": 28537.162699969485,
     "returncode": 0,
     "demo_steps": [
       {
         "name": "knowledge/sync",
         "ok": true,
-        "duration_ms": 4986.915500019677
+        "duration_ms": 4461.903799965512
       },
       {
         "name": "events/seed",
         "ok": true,
-        "duration_ms": 158.3532999502495
+        "duration_ms": 163.2691000122577
       },
       {
         "name": "policy-proposal/generate",
         "ok": true,
-        "duration_ms": 26532.215699960943
+        "duration_ms": 18896.60889998777
       },
       {
         "name": "policy-proposal/validate",
         "ok": true,
-        "duration_ms": 95.13669996522367
+        "duration_ms": 110.9567999956198
       },
       {
         "name": "policy-proposal/execute (DRY_RUN)",
         "ok": true,
-        "duration_ms": 133.8493999792263
+        "duration_ms": 167.56999999051914
       },
       {
         "name": "metrics/overview",
         "ok": true,
-        "duration_ms": 37.17360005248338
+        "duration_ms": 40.18900002120063
       }
     ],
-    "stderr_tail": "00 OK\"\n2026-10-21 21:36:19 INFO    app.main :: Edge security system startup complete\n2026-10-21 21:36:19 INFO    httpx :: HTTP Request: GET http://testserver/api/v1/metrics/overview \"HTTP/1.1 200 OK\"\n"
+    "stderr_tail": "00 OK\"\n2026-10-21 21:57:08 INFO    app.main :: Edge security system startup complete\n2026-10-21 21:57:08 INFO    httpx :: HTTP Request: GET http://testserver/api/v1/metrics/overview \"HTTP/1.1 200 OK\"\n"
   },
   "concurrent_smoke": {
     "workers": 4,
     "rounds": 3,
     "total_tasks": 36,
-    "total_wall_clock_ms": 3581.172200036235,
+    "total_wall_clock_ms": 4013.2546999957412,
     "by_task": {
       "health": {
         "n": 24,
-        "min_ms": 1.6457000165246427,
-        "p50_ms": 3.9697999600321054,
-        "p95_ms": 5.930599989369512,
-        "max_ms": 6.024000002071261,
-        "ok": 0,
-        "failed": 24
+        "min_ms": 6.1224999953992665,
+        "p50_ms": 10.177500022109598,
+        "p95_ms": 33.27379998518154,
+        "max_ms": 45.260699989739805,
+        "ok": 24,
+        "failed": 0
       },
       "seed": {
         "n": 12,
-        "min_ms": 0.14359998749569058,
-        "p50_ms": 0.3361999988555908,
-        "p95_ms": 1.2127000372856855,
-        "max_ms": 1.2127000372856855,
+        "min_ms": 0.1873999717645347,
+        "p50_ms": 0.42380002560094,
+        "p95_ms": 3.4821000299416482,
+        "max_ms": 3.4821000299416482,
         "ok": 12,
         "failed": 0
       }
     }
   },
-  "pytest_full_wall_clock_ms": 177689.91580000147,
+  "pytest_full_wall_clock_ms": 184577.75619998574,
   "not_measured": {
     "real_iptables_apply_latency": "待验证 — 需 allow_real_execution=True + 真实 Linux iptables/nft 权限 (默认安全边界 prevent)",
     "nftables_rule_rollback_latency": "待验证 — 同上，需真实执行权限 + 目标 Linux 设备",
