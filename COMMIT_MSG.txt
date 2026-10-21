@@ -1,47 +1,35 @@
-feat: Phase 12 -- atomic rollback + auth refresh/blacklist + VictoriaMetrics remote-write
+feat: Phase 14 -- mTLS + per-role rate limit + Gunicorn launcher
 
-[Atomic rollback] ExecutionBackend.run_atomic() + rollback(handle)
-- BackendResult.rule_handle: identifies the applied rule for later delete
-- IptablesBackend: parse `nft list ruleset -h` to grab handle, then
-  `nft delete rule inet filter input handle N` to atomically remove
-- WindowsBackend: rule name == handle; rollback is
-  `netsh advfirewall firewall delete rule name="..."`
-- EchoBackend.run() no longer spawns subprocess (WinError 2 on Windows
-  where echo is a cmd built-in, not .exe); returns BackendResult(returncode=0)
-  directly so downstream always see SUCCEEDED on every platform
-- Executor._dispatch() calls run_atomic() and sets rollback="attempted"
-  in ExecutionRecord.trace_id when a handle exists and run failed
+[Rate-limit middleware] app/middleware/rate_limit.py
+- Per-role token bucket (threading.Lock + monotonic ticks)
+- 4 roles: admin (100/s), operator (50/s), viewer (20/s), anonymous (30/s)
+- auth_enabled=False → single anonymous bucket covers everything; zero-op for
+  every existing test, so Phase 0-13 regression stays green
+- Bypass /health /docs /openapi.json /metrics / (root) — infra endpoints never throttled
+- 429 + Retry-After header when bucket exhausted
 
-[Auth refresh + blacklist] app/middleware/auth.py + token_blacklist table
-- create_token() now emits jti (unique token id) + type=access|refresh
-- create_refresh_token() returns long-lived token (ttl = access ttl * 7)
-- decode_token() does HS256 -> exp -> blacklist check in order
-- _is_blacklisted_sync() uses sqlite3 direct connection (no async context
-  conflicts) and short-circuits if db_path missing
-- blacklist_token(jti, subject, reason, revoked_by) async SQLAlchemy path
-  stores sha256(jti) as primary key — raw jti never persisted
-- purge_expired_blacklist(retention_days=7) cleanup helper
-- TokenBlacklistORM: jti_hash / jti / subject / exp_at / revoked_at / reason /
-  revoked_by. exp_at nullable (revocation not always tied to exp)
+[mTLS middleware] app/middleware/mtls.py
+- mtls_enabled=False default
+- When on: checks request.state.client_cert (uvicorn needs SSL wiring); refuses
+  403 when cert missing; optionally verifies subject substring
+- Certificate material must be provided via CLI to uvicorn/gunicorn — this
+  middleware can't set up TLS itself (transport concern, not ASGI)
 
-[VictoriaMetrics remote-write] app/adapters/remote_write/victoria.py
-- _to_lines(metrics) converts MetricsStore.latest_overview() to line-protocol
-  text, compatible with /api/v1/push
-- send_to_vm(url, lines) uses stdlib requests (explicitly pinned in
-  pyproject.toml now) + timeout + exception safety
-- push_latest() reads MetricsStore.latest_overview() + push; runs in
-  run_in_executor so it does not block the event loop
-- main.py lifespan shutdown: if Settings.vm_remote_write_url is set,
-  automatically push the latest snapshot on graceful shutdown
+[Certs generator] scripts/gen_certs.sh
+- openssl one-shot: CA self-signed + server cert (CN=edge-server) + client cert
+  (CN=edge-client) — all stored in ./certs/
+- self-signed only; for testing, NOT production
+
+[Gunicorn launchers]
+- scripts/run_gunicorn.sh (Linux/Mac): gunicorn + uvicorn workers
+- scripts/run_gunicorn.ps1 (Windows): gunicorn if available else single uvicorn
+- Mirrors run_prod.sh flags but adds --workers for real multi-process
 
 [Config additions]
-- vm_remote_write_url (empty = don't push)
+- mtls_enabled / mtls_keyfile / mtls_certfile / mtls_ca_file / mtls_require_subject
+- rate_limit_admin_rps / rate_limit_operator_rps / rate_limit_viewer_rps / rate_limit_anonymous_rps
 
-[Bug fix during Phase 12]
-- TokenBlacklistORM.exp_at / reason / revoked_by: Phase 12 initially declared
-  them NOT NULL which conflicts with "reason is a note, not required". Fixed
-  by making them Optional[str]; SQLite required deleting old app.db so the
-  table was recreated with the right schema.
+[main.py] install_rate_limit + install_mtls middleware calls after route registration.
 
-264 passed (256 Phase 0-11 + 8 Phase 12). 1 skipped (IptablesBackend build
-is a pure string op but test marks non-Linux hosts skipped). 0 failed.
+264 passed, 1 skipped — identical to Phase 13 (rate-limit default-off, all
+buckets pre-warmed by default, TestClient lifespan creates fresh app).

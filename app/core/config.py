@@ -54,6 +54,17 @@ class Settings(BaseSettings):
     metrics_persist_enabled: bool = False  # 默认关闭；显式 True 才在 shutdown 自动 dump
     metrics_snapshot_interval_minutes: int = 0  # 后台定时快照（0 = 仅 shutdown，需 metrics_persist_enabled=True）
     vm_remote_write_url: str = ""  # 空 = 不推 VictoriaMetrics；填了就 shutdown 自动 push latest snapshot
+
+    # --- Phase 14: mTLS + rate-limit ---
+    mtls_enabled: bool = False  # 默认关闭
+    mtls_keyfile: str = ""
+    mtls_certfile: str = ""
+    mtls_ca_file: str = ""
+    mtls_require_subject: str = ""  # 空字符串 = 只验证书是否 present，不验 subject
+    rate_limit_admin_rps: float = 100.0
+    rate_limit_operator_rps: float = 50.0
+    rate_limit_viewer_rps: float = 20.0
+    rate_limit_anonymous_rps: float = 30.0
     authorized_assets: List[str] = Field(
         default_factory=lambda: ["127.0.0.0/8"],
         description="CIDR ranges that are authorized for dry-run simulation only.",

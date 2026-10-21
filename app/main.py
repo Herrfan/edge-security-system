@@ -78,7 +78,7 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version=settings.app_version,
         description=(
-            "Edge network security situational awareness prototype — Phase 10. "
+            "Edge network security situational awareness prototype — Phase 14. "
             "Business functionality (ingestion, detection, retrieval, RAG, policy, execution) "
             "lands progressively in later phases. All actions default to dry-run."
         ),
@@ -96,6 +96,12 @@ def create_app() -> FastAPI:
     api.include_router(retrieval_router)
     api.include_router(policy_router)
     api.include_router(metrics_router)
+
+    # --- Phase 14: middlewares (BEFORE the root route so they see everything) ---
+    from app.middleware.rate_limit import install_rate_limit
+    from app.middleware.mtls import install_mtls
+    install_rate_limit(api)
+    install_mtls(api)
 
     @api.get("/", include_in_schema=False)
     def _root() -> dict:
