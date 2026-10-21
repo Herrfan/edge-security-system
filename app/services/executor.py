@@ -13,6 +13,7 @@ reviewer can sanity-check before approving REAL execution.
 from __future__ import annotations
 
 import logging
+import platform
 import subprocess
 import time
 from typing import Optional
@@ -69,6 +70,13 @@ class Executor:
                     status = ExecutionStatus.FAILED
                     logger.warning("[REAL BLOCKED] Phase 6 guardrail: %s → deferred",
                                    proposal.action_type.value)
+                elif not self._is_linux():
+                    # 非 Linux (Windows / macOS): Unix shell 命令不可用
+                    # 安全降级 echo — 避免 FileNotFoundError 把无害命令标记 FAILED
+                    logger.warning("[REAL SKIP] non-Linux platform (%s): echo-only execution treated as success",
+                                   platform.system())
+                    stdout_summary = plan
+                    rollback_status = "N/A"
                 else:
                     logger.info("[REAL] executing: %s", plan)
                     try:
@@ -146,6 +154,10 @@ class Executor:
     def _is_safe_to_execute(self, proposal: PolicyProposal) -> bool:
         """REAL guardrail — Phase 6: only ALERT_ONLY / NO_ACTION are shell-safe."""
         return proposal.action_type.value in ("ALERT_ONLY", "NO_ACTION")
+
+    @staticmethod
+    def _is_linux() -> bool:
+        return platform.system() == "Linux"
 
     @staticmethod
     def _shell_split(cmd: str) -> list[str]:
