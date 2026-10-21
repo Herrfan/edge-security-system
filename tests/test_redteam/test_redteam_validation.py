@@ -344,11 +344,12 @@ class TestRAGActionMapDegradation:
 class TestExecutorGuardrail:
     """REAL 模式必须拦截所有破坏性动作。"""
 
-    def test_real_blocks_block_ip(self, executor):
+    def test_real_blocks_block_ip(self, executor, monkeypatch):
+        # allow_real_execution=False（默认）→ REAL 永远拦截，这是 product-level 硬边界
         p = _make_proposal(ActionType.BLOCK_IP, ip="10.0.0.5")
         rec = executor.execute(p, mode=ExecutionMode.REAL)
         assert rec.status == "FAILED"
-        assert "guardrail=True" in (rec.trace_id or "")
+        assert "allow_real_execution" in (rec.trace_id or "")
 
     def test_real_blocks_block_port(self, executor):
         p = _make_proposal(ActionType.BLOCK_PORT, port=22, requires_approval=True)
@@ -360,15 +361,17 @@ class TestExecutorGuardrail:
         rec = executor.execute(p, mode=ExecutionMode.REAL)
         assert rec.status == "FAILED"
 
-    def test_real_allows_alert_only(self, executor):
+    def test_real_alert_only_still_blocked_by_product_boundary(self, executor, monkeypatch):
+        """即便 ALERT_ONLY / NO_ACTION 是 shell-safe，allow_real_execution=False 仍然拦。"""
         p = _make_proposal(ActionType.ALERT_ONLY)
         rec = executor.execute(p, mode=ExecutionMode.REAL)
-        assert rec.status == "SUCCEEDED"
+        # Phase 11 先 allow_real_execution 门，再 action_type 门 → 这里 FAILED 是正确的
+        assert rec.status == "FAILED"
 
-    def test_real_allows_no_action(self, executor):
+    def test_real_no_action_still_blocked_by_product_boundary(self, executor):
         p = _make_proposal(ActionType.NO_ACTION)
         rec = executor.execute(p, mode=ExecutionMode.REAL)
-        assert rec.status == "SUCCEEDED"
+        assert rec.status == "FAILED"
 
     def test_dry_run_never_calls_subprocess(self, executor, monkeypatch):
         """DRY_RUN 模式 subprocess.run 不应被调用。"""
@@ -392,16 +395,18 @@ class TestExecutorGuardrail:
 
 
 class TestExecutedCommandSanity:
-    """即使 guardrail 放行，echo 的命令本身也必须安全。"""
+    """即便 guardrail 放行，echo 的命令本身也必须安全。Phase 11 改用 adapter."""
 
-    def test_alert_only_real_does_echo(self, executor):
+    def test_alert_only_plan_contains_echo(self):
+        from app.adapters.backends import EchoBackend
         p = _make_proposal(ActionType.ALERT_ONLY)
-        plan = executor._build_command(p, src_ip="10.0.0.5", dst_port=80)
+        plan = EchoBackend().build(p, src_ip="10.0.0.5", dst_port=80)
         assert "echo" in plan.lower() or "alert" in plan.lower()
 
-    def test_build_command_never_contains_shell_metachars(self, executor):
+    def test_build_command_never_contains_shell_metachars(self):
+        from app.adapters.backends import EchoBackend
         p = _make_proposal(ActionType.BLOCK_IP, ip="10.0.0.5")
-        plan = executor._build_command(p, src_ip="10.0.0.5", dst_port=None)
+        plan = EchoBackend().build(p)
         dangerous = [";", "|", "&", "`", "$(", "${"]
         for d in dangerous:
             assert d not in plan, f"plan={plan!r} contains dangerous shell char {d!r}"

@@ -136,7 +136,45 @@ def require_auth(
     return decode_token(token)
 
 
-# ---- 生命周期检查 ----------------------------------------------------------
+# ---- RBAC role constants ----
+
+ROLE_ADMIN = "admin"          # full CRUD + execute
+ROLE_OPERATOR = "operator"    # execute + validate + generate, no config
+ROLE_VIEWER = "viewer"        # read-only (health + events + metrics + policies)
+
+# Which roles can pass which FastAPI dependencies below
+_ROLE_POLICY = {
+    ROLE_ADMIN: {"/policy-proposal/execute", "/policy-proposal/generate",
+                 "/policy-proposal/validate", "/policy-proposals"},
+    ROLE_OPERATOR: {"/policy-proposal/execute", "/policy-proposal/generate",
+                    "/policy-proposal/validate", "/policy-proposals"},
+    ROLE_VIEWER: {"/policy-proposals"},
+}
+
+_ADMIN_ONLY = {"/metrics/overview", "/metrics/export", "/knowledge/sync", "/flows/seed-policy"}
+
+
+def require_roles(*allowed: str):
+    """FastAPI dependency factory — callers do ``Depends(require_roles("admin", "operator"))``.
+
+    If auth_enabled=False → always pass through (Phase 0-9 behavior preserved).
+    Otherwise checks the token payload's ``role`` claim.
+    """
+    from fastapi import HTTPException, status as _status
+
+    def _check(payload: dict = Depends(require_auth)):
+        s = get_settings()
+        if not s.auth_enabled:
+            return payload  # anonymous allowed
+        role = payload.get("role", "viewer")
+        if role not in allowed:
+            raise HTTPException(
+                status_code=_status.HTTP_403_FORBIDDEN,
+                detail=f"role '{role}' not in allowed roles {list(allowed)}",
+            )
+        return payload
+
+    return _check
 
 
 def auth_startup_check() -> None:

@@ -186,11 +186,11 @@ data/                             (gitignore：sqlite / 向量索引 / demo 报�
 
 | 项 | 限制 | 计划 |
 |---|---|---|
-| 执行后端 | 只有 echo dry-run，无真实防火墙集成（Phase 6 guardrail 保持 BLOCK_* 在 REAL 模式拦截） | Phase 11+ Linux iptables/nftables 适配（仍受 allow_real_execution 硬开关控制） |
-| 指标持久化 | **Phase 10 已落地**：SQLite 快照（默认关闭 `metrics_persist_enabled=True` 才启用）；可 `metrics_snapshot_interval_minutes` 定时快照 + 保留天数清理 | Phase 11+ 加 Prometheus remote-write / VictoriaMetrics |
-| API 鉴权 | **Phase 10 已落地**：HS256 JWT 骨架（默认关闭 `auth_enabled=True` 才启用）；`Depends(require_auth)` | Phase 11+ 加 RBAC / 刷新 token / 黑名单 |
+| 执行后端 | **Phase 11 已落地**：`ExecutionBackend` adapter 层 — `EchoBackend` / `IptablesBackend` (Linux) / `WindowsBackend` (netsh) + `select_backend()` 注册表。REAL 模式仍受 `allow_real_execution=False` 硬开关 + Phase 6 action-type guardrail 双重拦截 | Phase 12+ 加 nftables 原子 rollback / Cisco / Juniper / PAN-OS 后端 |
+| 指标持久化 | **Phase 10 已落地**：SQLite 快照（默认关闭 `metrics_persist_enabled=True` 才启用）；可 `metrics_snapshot_interval_minutes` 定时快照 + 保留天数清理 | Phase 12+ 加 Prometheus remote-write / VictoriaMetrics |
+| API 鉴权 | **Phase 11 已落地**：HS256 JWT 骨架 + RBAC（`admin` / `operator` / `viewer` 三角色）；`Depends(require_roles("admin", "operator"))` | Phase 12+ 加刷新 token / 黑名单 / mTLS |
 | 检测模型 | RuleDemo 是 hand-tuned 规则，SklearnBaseline 无预训练 | 后续接入真实 IDS 输出 |
-| 并发 | 单进程 FastAPI 开发服务 | 生产部署需 uvicorn workers + Gunicorn |
+| 并发 | **Phase 11 已落地**：`scripts/run_prod.sh` (Linux, 4 workers, uvloop) + `scripts/run_prod.ps1` (Windows)；`scripts/demo_e2e.py` 仍是 TestClient 单进程 | 生产部署建议 behind nginx + Gunicorn |
 | 异步模型 | SQLAlchemy async engine + aiosqlite；但 VecIndex / BM25 / Executor 是 sync | 可接受 — 推理 / 执行本身是重 CPU / 阻塞 |
 
 ## 文档
