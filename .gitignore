@@ -50,6 +50,11 @@ models/*.onnx
 htmlcov/
 .mypy_cache/
 
+# Local scratch (run artifacts / debug dumps)
+_*.txt
+_*.log
+COMMIT_MSG.txt
+
 # OS
 .DS_Store
 Thumbs.db
