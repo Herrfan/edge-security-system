@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edge Security — 策略审核面板</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Edge Security</h1>
+      <span class="sub">策略审核 · 可观测</span>
+    </div>
+    <div class="topbar-right">
+      <span id="server-status" class="badge badge-ok">● connected</span>
+      <span id="server-info" class="server-info">—</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="pending">待审批策略</button>
+    <button class="tab" data-tab="events">事件流</button>
+    <button class="tab" data-tab="metrics">指标</button>
+    <button class="tab" data-tab="all">全部策略</button>
+  </nav>
+
+  <!-- ============================================================ -->
+  <main>
+    <!-- 待审批 -->
+    <section class="tab-pane active" id="tab-pending">
+      <div class="toolbar">
+        <button id="btn-refresh" class="btn btn-primary">刷新</button>
+        <span class="hint">仅显示 NEEDS_APPROVAL 策略。 approve 后 → 可 execute。</span>
+      </div>
+      <div id="pending-cards" class="cards"></div>
+      <div id="pending-empty" class="empty hidden">
+        ✨ 当前没有需要审批的策略 — 系统处于 DRY_RUN / 安全状态
+      </div>
+    </section>
+
+    <!-- 事件 -->
+    <section class="tab-pane" id="tab-events">
+      <div class="toolbar">
+        <button id="btn-seed" class="btn">导入 flows_sample.csv</button>
+        <button id="btn-events-refresh" class="btn btn-primary">刷新</button>
+        <label>severity:
+          <select id="events-severity">
+            <option value="">全部</option>
+            <option value="CRITICAL">CRITICAL</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+          </select>
+        </label>
+      </div>
+      <div id="events-table" class="events-table"></div>
+    </section>
+
+    <!-- 指标 -->
+    <section class="tab-pane" id="tab-metrics">
+      <div class="toolbar">
+        <button id="btn-metrics-refresh" class="btn btn-primary">刷新</button>
+      </div>
+      <div id="metrics-grid" class="metrics-grid"></div>
+      <pre id="metrics-raw" class="metrics-raw hidden"></pre>
+    </section>
+
+    <!-- 全部策略 -->
+    <section class="tab-pane" id="tab-all">
+      <div class="toolbar">
+        <button id="btn-all-refresh" class="btn btn-primary">刷新</button>
+        <label>status:
+          <select id="all-status">
+            <option value="">全部</option>
+            <option value="NEEDS_VALIDATION">NEEDS_VALIDATION</option>
+            <option value="NEEDS_APPROVAL">NEEDS_APPROVAL</option>
+            <option value="APPROVED">APPROVED</option>
+            <option value="REJECTED">REJECTED</option>
+            <option value="EXECUTED">EXECUTED</option>
+            <option value="EXPIRED">EXPIRED</option>
+          </select>
+        </label>
+      </div>
+      <div id="all-cards" class="cards"></div>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <span class="version">edge-security-system · v0.1.0 · Phase 0-15</span>
+    <span class="safety">⚠ allow_real_execution=false — 干跑模式</span>
+  </footer>
+
+  <template id="card-template">
+    <article class="card">
+      <div class="card-head">
+        <span class="action-badge"></span>
+        <span class="severity-tag"></span>
+        <span class="status-tag"></span>
+      </div>
+      <div class="card-body">
+        <div class="rationale"></div>
+        <div class="params"></div>
+      </div>
+      <div class="card-actions"></div>
+    </article>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

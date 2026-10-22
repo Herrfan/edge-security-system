@@ -32,6 +32,17 @@ class ExecuteBody(BaseModel):
     approval_token: Optional[str] = None
 
 
+class ApproveBody(BaseModel):
+    """Approve or reject a policy that currently holds NEEDS_APPROVAL."""
+    policy_id: str
+    approve: bool = True           # true = APPROVED, false = REJECTED
+    reason: Optional[str] = None   # human-readable audit note
+    approver: Optional[str] = None # e.g. operator email
+    # approval_token is a shared secret the backend accepts once — matches Phase 9
+    # red-team test; keep as a simple pre-shared value for the MVP.
+    approval_token: Optional[str] = None
+
+
 # -------- POST /policy-proposal/generate -----------------------------------
 
 
@@ -78,6 +89,49 @@ async def policy_proposal_validate(body: ValidateBody, session: AsyncSession = D
         "policy_id": body.policy_id,
         "is_valid": vr.is_valid,
         "reasons": vr.reasons,
+    }
+
+
+# -------- POST /policy-proposal/approve -----------------------------------
+
+
+@router.post("/policy-proposal/approve")
+async def policy_proposal_approve(body: ApproveBody, session: AsyncSession = Depends(get_session)) -> dict:
+    """Approve or reject a proposal that is currently NEEDS_APPROVAL.
+
+    State machine:
+      NEEDS_APPROVAL → APPROVED  (approve=true)
+      NEEDS_APPROVAL → REJECTED  (approve=false)
+      Any other source status → 409 Conflict (illegal transition)
+
+    This endpoint does NOT actually execute the policy — it only transitions
+    the status. The caller must then POST /policy-proposal/execute.
+    """
+    from app.domain.common import PolicyStatus
+    from app.repositories.policy_repository import PolicyRepository
+
+    repo = PolicyRepository(session)
+    proposal = await repo.get(body.policy_id)
+    if proposal is None:
+        raise HTTPException(status_code=404, detail=f"policy {body.policy_id!r} not found")
+
+    if proposal.status != PolicyStatus.NEEDS_APPROVAL:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"policy is not in NEEDS_APPROVAL (current={proposal.status.value}); "
+                f"only NEEDS_APPROVAL can be approved/rejected"
+            ),
+        )
+
+    new_status = PolicyStatus.APPROVED if body.approve else PolicyStatus.REJECTED
+    await repo.update_status(body.policy_id, new_status)
+
+    return {
+        "policy_id": body.policy_id,
+        "status": new_status.value,
+        "approver": body.approver,
+        "reason": body.reason,
     }
 
 

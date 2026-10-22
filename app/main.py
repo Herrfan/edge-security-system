@@ -1,6 +1,9 @@
 """FastAPI application entrypoint.
 
-Wires configuration, logging, error handling, and route registration.
+All API is under ``/api/v1/*``. Static UI lives at ``/ui`` (served from
+``static/index.html`` via Starlette StaticFiles — zero frontend deps, no build
+step). FastAPI docs remain at ``/docs``.
+
 Start with:  uvicorn app.main:app
 """
 from __future__ import annotations
@@ -8,9 +11,12 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse
+from starlette.staticfiles import StaticFiles
 
 from app.api.routes.detection import router as detection_router
 from app.api.routes.events import router as events_router
@@ -109,7 +115,17 @@ def create_app() -> FastAPI:
             "service": settings.app_name,
             "version": settings.app_version,
             "docs": "/docs",
+            "ui": "/ui",
         }
+
+    # --- Phase 15: static UI ---
+    static_dir = Path(__file__).resolve().parents[1] / "static"
+    if static_dir.exists():
+        api.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+        @api.get("/ui", include_in_schema=False)
+        async def _ui() -> FileResponse:
+            return FileResponse(str(static_dir / "index.html"))
 
     return api
 
