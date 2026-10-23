@@ -100,26 +100,34 @@ export interface HealthInfo {
 }
 
 export interface IngestionSummary {
-  imported_flows: number
-  events_created: number
-  detector_used: string
-  detector_version: string
+  source_path: string
+  total_rows: number
+  imported: number
+  failed: number
+  errors: string[]
 }
 
 export interface MetricSeries {
-  value: number | null
+  value: number
   [labelKey: string]: unknown
 }
 
 export interface MetricBlock {
+  status: string
+  help: string
   series: MetricSeries[]
 }
 
 export interface MetricsOverview {
-  info?: Record<string, unknown>
-  system?: Record<string, unknown>
-  config?: Record<string, unknown>
-  metrics?: Record<string, MetricBlock>
+  generated_at: string
+  config: Record<string, unknown>
+  system: {
+    cpu_percent: number | null
+    rss_bytes: number | null
+    cpu_status: string
+    rss_status: string
+  }
+  metrics: Record<string, MetricBlock>
 }
 
 export interface ApiEnvelope<T> {

@@ -13,7 +13,7 @@ interface NavItem {
 
 const items: NavItem[] = [
   { path: '/dashboard',  label: '安全态势总览',  icon: '📊', kind: 'live' },
-  { path: '/traffic',    label: '流量分析',      icon: '🔍', kind: 'blocked' },
+  { path: '/traffic',    label: '流量分析',      icon: '🔍', kind: 'live' },
   { path: '/events',     label: '安全事件',      icon: '⚠️', kind: 'live' },
   { path: '/knowledge',  label: '威胁知识库',    icon: '📚', kind: 'live' },
   { path: '/policies',   label: '策略工作台',    icon: '🛡️', kind: 'live' },

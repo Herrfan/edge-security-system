@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from './client'
-import type { SecurityEvent, IngestionSummary } from '@/types/api'
+import type { SecurityEvent } from '@/types/api'
 
 export interface ListEventsQuery {
   limit?: number
@@ -28,22 +28,4 @@ export function seedEvents(maxRecords?: number, assetId = 'default-asset') {
     max_records: maxRecords ?? null,
     asset_id: assetId,
   })
-}
-
-/**
- * Import flows from a CSV file uploaded by the client.
- * Multipart upload — not JSON. Uses fetch directly because apiPost sends JSON.
- */
-export async function importFlows(file: File): Promise<IngestionSummary> {
-  const form = new FormData()
-  form.append('file', file)
-  const res = await fetch('/api/v1/flows/import', {
-    method: 'POST',
-    body: form,
-  })
-  if (!res.ok) {
-    const detail = (await res.json().catch(() => ({})))?.detail || res.statusText
-    throw new Error(`flows/import failed: ${res.status} ${detail}`)
-  }
-  return res.json() as Promise<IngestionSummary>
 }

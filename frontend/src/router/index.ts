@@ -5,6 +5,7 @@ import EventsListView from '@/views/EventsListView.vue'
 import KnowledgeBaseView from '@/views/KnowledgeBaseView.vue'
 import PolicyWorkbenchView from '@/views/PolicyWorkbenchView.vue'
 import SettingsView from '@/views/SettingsView.vue'
+import TrafficAnalysisView from '@/views/TrafficAnalysisView.vue'
 import PlaceholderView from '@/views/PlaceholderView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
@@ -19,7 +20,7 @@ export default createRouter({
       children: [
         { path: '', redirect: '/dashboard' },
         { path: 'dashboard',  name: 'dashboard',  component: DashboardView },
-        { path: 'traffic',    name: 'traffic',    component: PlaceholderView, props: { kind: 'blocked', title: '流量分析', hint: '后端检测任务生命周期 API 尚未实现（仅 flows/import 一次性调用）' } },
+        { path: 'traffic',    name: 'traffic',    component: TrafficAnalysisView },
         { path: 'events',     name: 'events',     component: EventsListView },
         { path: 'knowledge',  name: 'knowledge',  component: KnowledgeBaseView },
         { path: 'policies',   name: 'policies',   component: PolicyWorkbenchView },
