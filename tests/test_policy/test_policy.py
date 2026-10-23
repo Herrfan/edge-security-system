@@ -235,3 +235,95 @@ class TestPolicyValidateExecuteAPI:
         r = client.get("/api/v1/policy-proposals")
         assert r.status_code == 200
         assert isinstance(r.json(), list)
+
+
+# ============================================================================
+# F2 addition: POST /policy-proposal/approve state-machine coverage
+# ============================================================================
+
+
+def _setup_needs_approval_proposal(client, repo_root) -> str:
+    """Convenience: knowledge sync → events seed → generate → execute DRY_RUN.
+
+    After DRY_RUN executes successfully the proposal lands in NEEDS_APPROVAL,
+    which is the ONLY legal source state for POST /policy-proposal/approve.
+    """
+    kpath = repo_root / "data" / "knowledge" / "security_knowledge.jsonl"
+    csv_path = repo_root / "data" / "samples" / "flows_sample.csv"
+    client.post("/api/v1/knowledge/sync", json={"input_path": str(kpath), "reset_first": True})
+    client.post("/api/v1/events/seed", json={
+        "input_file": str(csv_path), "detector_id": "rule-demo", "max_records": 10,
+    })
+    event_id = client.get("/api/v1/events?limit=1").json()[0]["event_id"]
+    proposal = client.post("/api/v1/policy-proposal/generate", json={"event_id": event_id}).json()
+    policy_id = proposal["proposal"]["policy_id"]
+    # Validate (non-fatal; just ensures RAG proposal is reasonable)
+    client.post("/api/v1/policy-proposal/validate", json={"policy_id": policy_id})
+    # Execute DRY_RUN → proposal transitions to NEEDS_APPROVAL
+    client.post("/api/v1/policy-proposal/execute", json={"policy_id": policy_id, "mode": "DRY_RUN"})
+    # Verify landed in NEEDS_APPROVAL
+    final_status = None
+    for p in client.get("/api/v1/policy-proposals").json():
+        if p["policy_id"] == policy_id:
+            final_status = p["status"]
+            break
+    assert final_status == "NEEDS_APPROVAL", (
+        f"setup failed — expected NEEDS_APPROVAL after DRY_RUN, got {final_status!r}"
+    )
+    return policy_id
+
+
+class TestPolicyApproveAPI:
+    """Phase F2 — covers the approve endpoint that F0 audit flagged as missing pytest."""
+
+    def test_approve_happy_path(self, client, repo_root):
+        """NEEDS_APPROVAL → APPROVED."""
+        policy_id = _setup_needs_approval_proposal(client, repo_root)
+
+        r = client.post("/api/v1/policy-proposal/approve", json={
+            "policy_id": policy_id,
+            "approve": True,
+            "reason": "operator review: OK to proceed",
+            "approver": "operator@edge.local",
+        })
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["policy_id"] == policy_id
+        assert body["status"] == "APPROVED"
+        assert body["approver"] == "operator@edge.local"
+        assert body["reason"] == "operator review: OK to proceed"
+
+    def test_approve_reject(self, client, repo_root):
+        """NEEDS_APPROVAL → REJECTED."""
+        policy_id = _setup_needs_approval_proposal(client, repo_root)
+
+        r = client.post("/api/v1/policy-proposal/approve", json={
+            "policy_id": policy_id,
+            "approve": False,
+            "reason": "too broad scope, requires revision",
+        })
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["status"] == "REJECTED"
+
+    def test_approve_illegal_transition_409(self, client, repo_root):
+        """APPROVED → APPROVED is illegal (must be NEEDS_APPROVAL source)."""
+        policy_id = _setup_needs_approval_proposal(client, repo_root)
+
+        # First approval → APPROVED
+        client.post("/api/v1/policy-proposal/approve", json={
+            "policy_id": policy_id, "approve": True,
+        })
+
+        # Second approval attempt from APPROVED source → 409
+        r = client.post("/api/v1/policy-proposal/approve", json={
+            "policy_id": policy_id, "approve": True,
+        })
+        assert r.status_code == 409, f"expected 409 on illegal transition, got {r.status_code}: {r.text}"
+        assert "NEEDS_APPROVAL" in r.json()["detail"]
+
+    def test_approve_not_found_404(self, client):
+        r = client.post("/api/v1/policy-proposal/approve", json={
+            "policy_id": "policy_does_not_exist", "approve": True,
+        })
+        assert r.status_code == 404

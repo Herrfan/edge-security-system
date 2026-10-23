@@ -20,6 +20,10 @@ const props = defineProps<{
   eventId?: string  // optional: event_id used to regenerate
 }>()
 
+const emit = defineEmits<{
+  (e: 'refresh'): void
+}>()
+
 const expanded = ref(false)
 const validating = ref(false)
 const validation = ref<ValidationResult | null>(null)
@@ -139,8 +143,18 @@ async function regenerate() {
     </div>
 
     <!-- Dialogs -->
-    <ApproveDialog v-if="approveOpen" :policy-id="proposal.policy_id" @close="approveOpen = false" @done="expanded = false" />
-    <ExecuteDialog v-if="executeOpen" :policy-id="proposal.policy_id" @close="executeOpen = false" @done="expanded = false" />
+    <ApproveDialog
+      v-if="approveOpen"
+      :policy-id="proposal.policy_id"
+      @close="approveOpen = false"
+      @done="() => { expanded = false; emit('refresh') }"
+    />
+    <ExecuteDialog
+      v-if="executeOpen"
+      :policy-id="proposal.policy_id"
+      @close="executeOpen = false"
+      @done="() => { expanded = false; emit('refresh') }"
+    />
   </div>
 </template>
 
