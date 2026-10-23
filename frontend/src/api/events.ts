@@ -16,11 +16,18 @@ export function getEvent(eventId: string) {
   return apiGet<SecurityEvent>(`/api/v1/events/${eventId}`)
 }
 
-export function seedEvents(n = 3000) {
-  return apiPost<{ imported_flows: number; events_created: number }>(
-    '/api/v1/events/seed',
-    { n },
-  )
+export function seedEvents(maxRecords?: number, assetId = 'default-asset') {
+  // Uses the convenience POST /api/v1/events/seed-default helper which
+  // defaults to repo's data/samples/flows_sample.csv + rule-demo detector.
+  return apiPost<{
+    seeded_events: number
+    detector_id: string
+    input_file?: string
+    max_records?: number | null
+  }>('/api/v1/events/seed-default', {
+    max_records: maxRecords ?? null,
+    asset_id: assetId,
+  })
 }
 
 /**

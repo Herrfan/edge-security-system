@@ -83,3 +83,51 @@ async def events_seed(body: SeedBody, session: AsyncSession = Depends(get_sessio
     EVENTS_SEEDED_TOTAL.inc(labels={"detector_id": body.detector_id})
 
     return {"seeded_events": n, "detector_id": body.detector_id}
+
+
+class SeedDefaultBody(BaseModel):
+    max_records: Optional[int] = None
+    asset_id: str = "default-asset"
+
+
+@router.post("/events/seed-default")
+async def events_seed_default(body: SeedDefaultBody, session: AsyncSession = Depends(get_session)) -> dict:
+    """Convenience dev helper — seeds events from the repo's sample CSV using rule-demo detector.
+
+    Falls back to defaults:
+        input_file  = data/samples/flows_sample.csv
+        detector_id = rule-demo
+        max_records = all rows (None)
+        asset_id    = default-asset (overridable via body.asset_id)
+    """
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[3]
+    csv_path = repo_root / "data" / "samples" / "flows_sample.csv"
+    if not csv_path.exists():
+        raise HTTPException(status_code=404, detail=f"default sample CSV not found at {csv_path}")
+
+    det = get_detector("rule-demo")
+    if det is None:
+        raise HTTPException(status_code=400, detail="rule-demo detector not available")
+
+    flows = list(iter_records(csv_path))
+    if body.max_records:
+        flows = flows[: body.max_records]
+
+    results = det.predict(flows)
+    svc = EventService(session)
+    events = [
+        svc.from_detection(r, asset_id=body.asset_id, trace_id=None) for r in results
+    ]
+    n = await svc.save_batch(events)
+
+    from app.core.observability import EVENTS_SEEDED_TOTAL
+    EVENTS_SEEDED_TOTAL.inc(labels={"detector_id": "rule-demo"})
+
+    return {
+        "seeded_events": n,
+        "detector_id": "rule-demo",
+        "input_file": str(csv_path),
+        "max_records": body.max_records,
+    }

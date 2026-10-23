@@ -15,7 +15,7 @@ const items: NavItem[] = [
   { path: '/dashboard',  label: '安全态势总览',  icon: '📊', kind: 'live' },
   { path: '/traffic',    label: '流量分析',      icon: '🔍', kind: 'blocked' },
   { path: '/events',     label: '安全事件',      icon: '⚠️', kind: 'live' },
-  { path: '/knowledge',  label: '威胁知识库',    icon: '📚', kind: 'blocked' },
+  { path: '/knowledge',  label: '威胁知识库',    icon: '📚', kind: 'live' },
   { path: '/policies',   label: '策略工作台',    icon: '🛡️', kind: 'live' },
   { path: '/evaluation', label: '评估中心',      icon: '📈', kind: 'blocked' },
   { path: '/audit',      label: '审计日志',      icon: '📝', kind: 'blocked' },

@@ -33,6 +33,25 @@ def knowledge_sync(body: SyncBody) -> dict:
     return result
 
 
+@router.post("/knowledge/sync-default")
+def knowledge_sync_default() -> dict:
+    """Convenience dev helper — syncs the default knowledge JSONL from the repo.
+
+    Defaults to data/knowledge/security_knowledge.jsonl (reset_first=True).
+    """
+    from app.services.knowledge_ingestion import sync_knowledge
+    from app.services.feedback import snapshot_knowledge_gauges
+
+    repo_root = Path(__file__).resolve().parents[3]
+    default_path = repo_root / "data" / "knowledge" / "security_knowledge.jsonl"
+    if not default_path.exists():
+        raise HTTPException(status_code=404, detail=f"default knowledge file not found at {default_path}")
+
+    result = sync_knowledge(default_path, reset_first=True)
+    snapshot_knowledge_gauges(result["chunks"], result["documents"], backend=result["provider"].split(":")[0])
+    return result
+
+
 # ---------------- /retrieval/{id} ---------------------------------------
 
 
