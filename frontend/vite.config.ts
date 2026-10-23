@@ -3,8 +3,10 @@ import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 
 // Development: vite dev server on :5173 proxies /api + /health + /metrics to FastAPI on :8000.
-// Production: FastAPI mounts frontend/dist/, no proxy needed — everything same origin.
+// Production: FastAPI mounts frontend/dist/ at /static, so asset URLs must be /static/assets/*.
+// The SPA entrypoint /ui serves index.html which references /static/assets/*.js.
 export default defineConfig({
+  base: '/static/',
   plugins: [vue()],
   resolve: {
     alias: {
