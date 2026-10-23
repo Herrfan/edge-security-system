@@ -5,16 +5,23 @@
  * Buckets events by created_at hour, plotted as event counts over time.
  * Derived client-side from listEvents({limit}) results — NO backend trend API.
  * Explicitly labeled "前端推导 · 时间范围=当前返回的事件集".
+ *
+ * echarts modular tree-shake import — LineChart + Grid + Tooltip + AreaStyle via LineChart.
  */
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import { use } from 'echarts/core'
+import { LineChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+import * as echarts from 'echarts/core'
 import type { SecurityEvent } from '@/types/api'
+
+use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const props = defineProps<{ events: SecurityEvent[] }>()
 
 /** "YYYY-MM-DD HH" bucket key (UTC) */
 function hourBucket(iso: string): string {
-  // ISO 8601 with Z: "2026-10-24T00:04:54.123456Z"
   return iso.slice(0, 13).replace('T', ' ')
 }
 
@@ -37,15 +44,17 @@ const tooFew = computed(() => buckets.value.keys.length < 2)
 const chartRef = ref<HTMLElement | null>(null)
 let inst: echarts.ECharts | null = null
 
+function resize() { inst?.resize() }
+
 function render() {
   if (!inst) return
   const { keys, values } = buckets.value
-  const option = {
+  inst.setOption({
     tooltip: { trigger: 'axis', backgroundColor: '#1f2340', borderColor: '#2a2e4d', textStyle: { color: '#e4e7f7', fontSize: 12 } },
     grid: { top: 10, right: 16, bottom: 30, left: 40 },
     xAxis: {
       type: 'category',
-      data: keys.map((k) => k.slice(-2) + ':00'),  // "23:00"
+      data: keys.map((k) => k.slice(-2) + ':00'),
       axisLine: { lineStyle: { color: '#2a2e4d' } },
       axisLabel: { color: '#8a8fb8', fontSize: 10, interval: 0 },
     },
@@ -73,8 +82,7 @@ function render() {
         },
       },
     }],
-  }
-  inst.setOption(option, true)
+  }, true)
 }
 
 onMounted(async () => {
@@ -82,9 +90,13 @@ onMounted(async () => {
   if (chartRef.value) {
     inst = echarts.init(chartRef.value)
     render()
+    window.addEventListener('resize', resize)
   }
 })
-onBeforeUnmount(() => { inst?.dispose() })
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resize)
+  inst?.dispose()
+})
 watch(() => props.events, () => render(), { deep: true })
 </script>
 

@@ -5,10 +5,18 @@
  * Derived client-side from listEvents({limit}) results, NOT from any backend
  * risk-distribution endpoint. Explicitly labeled "前端推导" so users never
  * mistake it for a backend-aggregated statistic.
+ *
+ * echarts modular tree-shake import — only BarChart + Grid + Tooltip needed.
  */
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import { use } from 'echarts/core'
+import { BarChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+import * as echarts from 'echarts/core'
 import type { SecurityEvent, Severity } from '@/types/api'
+
+use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const props = defineProps<{ events: SecurityEvent[] }>()
 
@@ -28,9 +36,11 @@ const isEmpty = computed(() => props.events.length === 0)
 const chartRef = ref<HTMLElement | null>(null)
 let inst: echarts.ECharts | null = null
 
+function resize() { inst?.resize() }
+
 function render() {
   if (!inst) return
-  const option = {
+  inst.setOption({
     tooltip: { trigger: 'axis', backgroundColor: '#1f2340', borderColor: '#2a2e4d', textStyle: { color: '#e4e7f7', fontSize: 12 } },
     grid: { top: 10, right: 16, bottom: 24, left: 40 },
     xAxis: {
@@ -53,8 +63,7 @@ function render() {
         itemStyle: { color: COLORS[c.severity], borderRadius: [3, 3, 0, 0] },
       })),
     }],
-  }
-  inst.setOption(option, true)
+  }, true)
 }
 
 onMounted(async () => {
@@ -62,9 +71,13 @@ onMounted(async () => {
   if (chartRef.value) {
     inst = echarts.init(chartRef.value)
     render()
+    window.addEventListener('resize', resize)
   }
 })
-onBeforeUnmount(() => { inst?.dispose() })
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resize)
+  inst?.dispose()
+})
 watch(() => props.events, () => render(), { deep: true })
 </script>
 
