@@ -1,0 +1,76 @@
+/* Edge Security System — F1 dark theme global styles
+   Mirrors the design tokens used in static/style.css (Phase 15) +
+   scoped component styles across layouts/views. */
+
+:root {
+  --bg-root:    #0f1120;
+  --bg-panel:   #141729;
+  --bg-card:    #171a2e;
+  --bg-hover:   #1f2340;
+  --border:     #2a2e4d;
+
+  --text-hi:    #e4e7f7;
+  --text-mid:   #c5c8e4;
+  --text-sub:   #8a8fb8;
+  --text-dim:   #5a5f8a;
+
+  --accent:     #4f8cff;
+  --ok:         #29c38b;
+  --warn:       #ffb454;
+  --err:        #ff5a5f;
+
+  --mono:       ui-monospace, Menlo, Consolas, monospace;
+  --sans:       system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #app {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg-root);
+  color: var(--text-hi);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+}
+
+body { overflow: hidden; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  font-family: var(--mono);
+  background: var(--bg-hover);
+  color: var(--text-mid);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+pre { margin: 0; font-family: var(--mono); }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+select, input {
+  font-family: inherit;
+  outline: none;
+}
+
+/* Scrollbars — subtle dark chrome */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #2a2e4d; border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: #3a3f65; }

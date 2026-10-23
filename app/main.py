@@ -118,14 +118,44 @@ def create_app() -> FastAPI:
             "ui": "/ui",
         }
 
-    # --- Phase 15: static UI ---
-    static_dir = Path(__file__).resolve().parents[1] / "static"
-    if static_dir.exists():
-        api.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+    # --- Phase 15 → F1: Vue SPA mount ---
+    # Priority 1: frontend/dist (built by `npm run build` in frontend/)
+    # Priority 2: static/ fallback (legacy Phase 15 zero-dep SPA, still works)
+    repo_root = Path(__file__).resolve().parents[1]
+    frontend_dist = repo_root / "frontend" / "dist"
+    legacy_static = repo_root / "static"
+
+    if frontend_dist.exists() and (frontend_dist / "index.html").exists():
+        api.mount("/static", StaticFiles(directory=str(frontend_dist)), name="frontend-dist")
 
         @api.get("/ui", include_in_schema=False)
         async def _ui() -> FileResponse:
-            return FileResponse(str(static_dir / "index.html"))
+            return FileResponse(str(frontend_dist / "index.html"))
+
+        # SPA fallback: any non-/api/v1/*, non-/docs, non-/openapi.json, non-/health, non-/metrics
+        # path should serve index.html so Vue Router (hash history) can resolve it client-side.
+        @api.get("/{full_path:path}", include_in_schema=False)
+        async def _spa_fallback(full_path: str) -> FileResponse:
+            # Let explicit API/docs/health/metrics routes take precedence — Starlette handles 404 first
+            # before this fallback fires, but we still guard on extension to avoid masking static assets.
+            if full_path and "." in full_path.split("/")[-1]:
+                # Has file extension (e.g. .js, .css, .svg) — don't try to serve index.html
+                from fastapi import HTTPException
+                raise HTTPException(status_code=404, detail="Not Found")
+            return FileResponse(str(frontend_dist / "index.html"))
+
+    elif legacy_static.exists() and (legacy_static / "index.html").exists():
+        api.mount("/static", StaticFiles(directory=str(legacy_static)), name="static-legacy")
+
+        @api.get("/ui", include_in_schema=False)
+        async def _ui() -> FileResponse:
+            return FileResponse(str(legacy_static / "index.html"))
+
+    else:
+        _logger.warning(
+            "No frontend found — neither frontend/dist/ nor static/ exists. "
+            "Run `cd frontend && npm run build` or keep static/index.html."
+        )
 
     return api
 

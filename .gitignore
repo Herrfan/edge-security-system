@@ -50,6 +50,12 @@ models/*.onnx
 htmlcov/
 .mypy_cache/
 
+# Frontend (Vue + Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.turbo/
+
 # Local scratch (run artifacts / debug dumps)
 _*.txt
 _*.log
