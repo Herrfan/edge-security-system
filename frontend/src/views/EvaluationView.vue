@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * EvaluationView — Phase F4 评估中心占位.
  *
@@ -131,34 +131,34 @@ import DataSourceBadge from '@/components/common/DataSourceBadge.vue'
 
 <style scoped>
 .page { padding: 0; }
-.page h2 { font-size: 18px; font-weight: 600; margin: 0 0 4px; color: #e4e7f7; }
-.page-sub { font-size: 12px; color: #8a8fb8; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-.page-sub .muted { color: #ffb454; }
+.page h2 { font-size: 18px; font-weight: 600; margin: 0 0 4px; color: var(--text-hi); }
+.page-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.page-sub .muted { color: var(--warn); }
 .page-sub code { font-family: ui-monospace, Consolas, monospace; }
 
-.blocked-banner { background: rgba(255, 90, 95, 0.08); border: 1px solid rgba(255, 90, 95, 0.35); border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+.blocked-banner { background: rgba(240, 68, 82, 0.08); border: 1px solid rgba(240, 68, 82, 0.35); border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
 .bb-icon { font-size: 28px; }
-.bb-title { font-size: 14px; font-weight: 700; color: #ff5a5f; margin-bottom: 6px; }
+.bb-title { font-size: 14px; font-weight: 700; color: var(--err); margin-bottom: 6px; }
 .bb-desc { font-size: 12px; color: #c3c7dc; line-height: 1.7; }
-.bb-desc code { background: #1f2340; padding: 1px 5px; border-radius: 3px; color: #4f8cff; font-family: ui-monospace, Consolas, monospace; }
+.bb-desc code { background: var(--bg-surface); padding: 1px 5px; border-radius: 3px; color: var(--accent); font-family: ui-monospace, Consolas, monospace; }
 
-.planned-card { background: #11132a; border: 1px solid #2a2e4d; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
-.planned-title { font-size: 13px; font-weight: 700; color: #e4e7f7; margin-bottom: 14px; }
+.planned-card { background: #11132a; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+.planned-title { font-size: 13px; font-weight: 700; color: var(--text-hi); margin-bottom: 14px; }
 .planned-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .planned-cell { background: #1a1d36; border-radius: 8px; padding: 12px 14px; border: 1px solid #232642; }
 .pc-icon { font-size: 20px; margin-bottom: 4px; }
-.pc-title { font-size: 12px; font-weight: 700; color: #e4e7f7; margin-bottom: 4px; }
-.pc-desc { font-size: 11px; color: #8a8fb8; line-height: 1.6; }
+.pc-title { font-size: 12px; font-weight: 700; color: var(--text-hi); margin-bottom: 4px; }
+.pc-desc { font-size: 11px; color: var(--text-sub); line-height: 1.6; }
 
-.gap-card { background: #11132a; border: 1px solid #2a2e4d; border-radius: 10px; padding: 16px 20px; }
-.gap-title { font-size: 13px; font-weight: 700; color: #e4e7f7; margin-bottom: 12px; }
+.gap-card { background: #11132a; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+.gap-title { font-size: 13px; font-weight: 700; color: var(--text-hi); margin-bottom: 12px; }
 .gap-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.gap-table th { text-align: left; padding: 7px 10px; border-bottom: 1px solid #2a2e4d; color: #8a8fb8; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; }
+.gap-table th { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-sub); font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; }
 .gap-table td { padding: 7px 10px; border-bottom: 1px solid #1a1d36; color: #c3c7dc; }
 .gap-table tr:last-child td { border-bottom: none; }
-.status-no { color: #ff5a5f; font-weight: 600; background: rgba(255, 90, 95, 0.12); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
-.status-ok { color: #29c38b; font-weight: 600; background: rgba(41, 195, 139, 0.12); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
-.mono { font-family: ui-monospace, Consolas, monospace; color: #8a8fb8; font-size: 11px; }
+.status-no { color: var(--err); font-weight: 600; background: rgba(240, 68, 82, 0.12); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+.status-ok { color: var(--ok); font-weight: 600; background: rgba(16, 185, 129, 0.12); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+.mono { font-family: ui-monospace, Consolas, monospace; color: var(--text-sub); font-size: 11px; }
 
 /* F6 responsive */
 @media (max-width: 768px) {

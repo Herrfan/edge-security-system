@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * Search form for /api/v1/retrieval.
  * Emits { query, mode, topK } on submit.
@@ -56,17 +56,17 @@ defineExpose({ submit })
 .form { display: flex; flex-direction: column; gap: 8px; }
 .row { display: flex; gap: 8px; }
 .q-input {
-  flex: 1; background: #171a2e; border: 1px solid #2a2e4d; color: #e4e7f7;
+  flex: 1; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-hi);
   padding: 10px 14px; border-radius: 6px; font-size: 14px;
 }
-.q-input:focus { border-color: #4f8cff; outline: none; }
+.q-input:focus { border-color: var(--accent); outline: none; }
 .btn {
-  background: #4f8cff; color: #fff; border: none; padding: 0 20px; border-radius: 6px;
+  background: var(--accent); color: #fff; border: none; padding: 0 20px; border-radius: 6px;
   font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .opts { display: flex; gap: 10px; align-items: center; }
 .opt-input {
-  background: #171a2e; border: 1px solid #2a2e4d; color: #c5c8e4;
+  background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-mid);
   padding: 6px 10px; border-radius: 5px; font-size: 12px; font-family: inherit;
 }
 </style>

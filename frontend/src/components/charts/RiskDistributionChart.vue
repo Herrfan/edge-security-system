@@ -1,37 +1,39 @@
 <script setup lang="ts">
 /**
- * Risk Distribution Bar Chart — Phase F3 Dashboard.
- *
- * Derived client-side from listEvents({limit}) results, NOT from any backend
- * risk-distribution endpoint. Explicitly labeled "前端推导" so users never
- * mistake it for a backend-aggregated statistic.
- *
- * echarts modular tree-shake import — only BarChart + Grid + Tooltip needed.
+ * Risk Distribution — SOC v2 版.
+ * 改为环形图（参考图片风格），SOC 深蓝配色。
+ * 来自 client-side events severity 统计 — 标注"前端推导"。
  */
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { use } from 'echarts/core'
-import { BarChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent } from 'echarts/components'
+import { PieChart } from 'echarts/charts'
+import { TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import * as echarts from 'echarts/core'
 import type { SecurityEvent, Severity } from '@/types/api'
 
-use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
+use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer])
 
 const props = defineProps<{ events: SecurityEvent[] }>()
 
 const ORDER: Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']
 const COLORS: Record<Severity, string> = {
-  CRITICAL: '#ff5a5f', HIGH: '#ffb454', MEDIUM: '#4f8cff', LOW: '#29c38b', INFO: '#8a8fb8',
+  CRITICAL: '#F04452', HIGH: '#F59E0B', MEDIUM: '#3478F6', LOW: '#10B981', INFO: '#64748B',
+}
+const LABELS: Record<Severity, string> = {
+  CRITICAL: '严重', HIGH: '高危', MEDIUM: '中危', LOW: '低危', INFO: '信息',
 }
 
-const counts = computed(() => {
+const slices = computed(() => {
   const m: Record<string, number> = {}
   for (const e of props.events) m[e.severity] = (m[e.severity] || 0) + 1
-  return ORDER.map((sev) => ({ severity: sev, count: m[sev] || 0 }))
+  return ORDER
+    .filter((sev) => (m[sev] || 0) > 0)
+    .map((sev) => ({ name: LABELS[sev], value: m[sev], itemStyle: { color: COLORS[sev] } }))
 })
 
-const isEmpty = computed(() => props.events.length === 0)
+const total = computed(() => props.events.length)
+const isEmpty = computed(() => total.value === 0)
 
 const chartRef = ref<HTMLElement | null>(null)
 let inst: echarts.ECharts | null = null
@@ -41,27 +43,28 @@ function resize() { inst?.resize() }
 function render() {
   if (!inst) return
   inst.setOption({
-    tooltip: { trigger: 'axis', backgroundColor: '#1f2340', borderColor: '#2a2e4d', textStyle: { color: '#e4e7f7', fontSize: 12 } },
-    grid: { top: 10, right: 16, bottom: 24, left: 40 },
-    xAxis: {
-      type: 'category',
-      data: counts.value.map((c) => c.severity),
-      axisLine: { lineStyle: { color: '#2a2e4d' } },
-      axisLabel: { color: '#8a8fb8', fontSize: 11 },
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#0D1930', borderColor: '#1E3A5F',
+      textStyle: { color: '#E8F0FF', fontSize: 12 },
+      formatter: '{b}: {c} ({d}%)',
     },
-    yAxis: {
-      type: 'value',
-      axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1f2340' } },
-      axisLabel: { color: '#8a8fb8', fontSize: 11 },
+    legend: {
+      orient: 'vertical', right: 8, top: 'center',
+      itemWidth: 10, itemHeight: 10, itemGap: 10,
+      textStyle: { color: '#9CB0D0', fontSize: 11 },
     },
     series: [{
-      type: 'bar',
-      barMaxWidth: 48,
-      data: counts.value.map((c) => ({
-        value: c.count,
-        itemStyle: { color: COLORS[c.severity], borderRadius: [3, 3, 0, 0] },
-      })),
+      type: 'pie',
+      radius: ['52%', '72%'],
+      center: ['38%', '50%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderRadius: 4, borderColor: '#0D1930', borderWidth: 2 },
+      label: { show: false },
+      emphasis: {
+        label: { show: true, fontSize: 14, fontWeight: 'bold', color: '#E8F0FF' },
+      },
+      data: slices.value,
     }],
   }, true)
 }
@@ -74,28 +77,50 @@ onMounted(async () => {
     window.addEventListener('resize', resize)
   }
 })
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', resize)
-  inst?.dispose()
-})
+onBeforeUnmount(() => { window.removeEventListener('resize', resize); inst?.dispose() })
 watch(() => props.events, () => render(), { deep: true })
 </script>
 
 <template>
-  <div class="chart-wrap">
-    <div class="chart-head">
-      <span class="chart-title">风险分布 (按 severity)</span>
-      <span class="derived-tag">前端推导 · 样本 {{ events.length }}</span>
+  <div class="card">
+    <div class="head">
+      <span class="title">风险等级分布</span>
+      <span class="badge">前端推导 · 样本 {{ total }}</span>
     </div>
     <div v-if="isEmpty" class="empty">暂无事件数据</div>
-    <div v-else ref="chartRef" style="height: 260px; width: 100%" />
+    <template v-else>
+      <div class="center-label">
+        <div class="total">{{ total }}</div>
+        <div class="sub">总事件</div>
+      </div>
+      <div ref="chartRef" class="chart" />
+    </template>
   </div>
 </template>
 
 <style scoped>
-.chart-wrap { background: #11132a; border-radius: 10px; border: 1px solid #2a2e4d; padding: 12px 14px; }
-.chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.chart-title { font-size: 13px; font-weight: 600; color: #e4e7f7; letter-spacing: 0.3px; }
-.derived-tag { font-size: 10px; color: #8a8fb8; background: #1f2340; padding: 2px 6px; border-radius: 4px; border: 1px solid #2a2e4d; }
-.empty { height: 260px; display: flex; align-items: center; justify-content: center; color: #8a8fb8; font-size: 13px; }
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex; flex-direction: column;
+}
+.head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.title { font-size: var(--fs-xl); font-weight: 600; color: var(--text-hi); letter-spacing: 0.3px; }
+.badge {
+  font-size: var(--fs-xs); color: var(--text-sub);
+  background: var(--bg-surface); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: var(--radius-sm);
+}
+.chart { height: 220px; width: 100%; position: relative; }
+.center-label {
+  position: absolute; top: 45%; left: 34%;
+  transform: translate(-50%, -50%);
+  text-align: center; z-index: 1;
+  pointer-events: none;
+}
+.center-label .total { font-size: 24px; font-weight: 700; color: var(--text-hi); font-family: var(--font-mono); }
+.center-label .sub { font-size: var(--fs-xs); color: var(--text-dim); }
+.empty { height: 220px; display: flex; align-items: center; justify-content: center; color: var(--text-sub); font-size: var(--fs-sm); }
 </style>

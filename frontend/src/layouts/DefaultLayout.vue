@@ -21,14 +21,13 @@ import Sidebar from './Sidebar.vue'
 </template>
 
 <style scoped>
-.layout { min-height: 100vh; display: flex; flex-direction: column; }
-.body { display: flex; flex: 1; }
-.content { flex: 1; padding: 24px; overflow: auto; }
+.layout { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-root); }
+.body { display: flex; flex: 1; min-height: calc(100vh - var(--topbar-h)); }
+.content { flex: 1; padding: var(--space-6); overflow: auto; background: var(--bg-root); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* F6 responsive — sidebar collapses on narrow viewports */
 @media (max-width: 768px) {
-  .content { padding: 16px; }
+  .content { padding: var(--space-4); }
 }
 </style>

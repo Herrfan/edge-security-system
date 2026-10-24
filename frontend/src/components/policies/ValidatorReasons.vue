@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * Displays deterministic validation results for a policy proposal.
  * Is_valid = green + checkmark; reasons as bullet list.
@@ -28,24 +28,24 @@ defineProps<{
 
 <style scoped>
 .validator {
-  background: #141729; border-radius: 6px; padding: 10px 12px;
+  background: var(--bg-nav); border-radius: 6px; padding: 10px 12px;
   border: 1px solid;
 }
-.validator.is-valid   { border-color: rgba(41, 195, 139, 0.35); }
-.validator.is-invalid { border-color: rgba(255, 90, 95, 0.35); }
+.validator.is-valid   { border-color: rgba(16, 185, 129, 0.35); }
+.validator.is-invalid { border-color: rgba(240, 68, 82, 0.35); }
 .validator-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; font-size: 12px; }
 .indicator {
   width: 18px; height: 18px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 12px;
 }
-.is-valid   .indicator { background: rgba(41, 195, 139, 0.2); color: #29c38b; }
-.is-invalid .indicator { background: rgba(255, 90, 95, 0.2);  color: #ff5a5f; }
-.is-valid   .label strong { color: #29c38b; }
-.is-invalid .label strong { color: #ff5a5f; }
-.label { color: #c5c8e4; }
+.is-valid   .indicator { background: rgba(16, 185, 129, 0.2); color: var(--ok); }
+.is-invalid .indicator { background: rgba(240, 68, 82, 0.2);  color: var(--err); }
+.is-valid   .label strong { color: var(--ok); }
+.is-invalid .label strong { color: var(--err); }
+.label { color: var(--text-mid); }
 .reasons { display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
-.reason { color: #ffb454; padding-left: 12px; position: relative; }
-.reason::before { content: '▸'; position: absolute; left: 0; color: #ffb454; }
-.no-reasons { color: #5a5f8a; font-style: italic; font-size: 11px; }
+.reason { color: var(--warn); padding-left: 12px; position: relative; }
+.reason::before { content: '▸'; position: absolute; left: 0; color: var(--warn); }
+.no-reasons { color: var(--text-dim); font-style: italic; font-size: 11px; }
 </style>

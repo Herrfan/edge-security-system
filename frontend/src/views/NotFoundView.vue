@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { RouterLink } from 'vue-router'
 </script>
 
@@ -15,15 +15,15 @@ import { RouterLink } from 'vue-router'
 .nf-wrap {
   min-height: 60vh;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: #8a8fb8; text-align: center;
+  color: var(--text-sub); text-align: center;
 }
-.nf-code { font-size: 96px; font-weight: 700; color: #4f8cff; font-family: ui-monospace, Menlo, monospace; line-height: 1; text-shadow: 0 0 30px rgba(79, 140, 255, 0.3); }
-.nf-title { font-size: 20px; font-weight: 600; color: #c5c8e4; margin: 12px 0 6px; }
+.nf-code { font-size: 96px; font-weight: 700; color: var(--accent); font-family: var(--font-mono); line-height: 1; text-shadow: 0 0 30px rgba(52, 120, 246, 0.3); }
+.nf-title { font-size: 20px; font-weight: 600; color: var(--text-mid); margin: 12px 0 6px; }
 .nf-hint { font-size: 13px; margin-bottom: 20px; }
 .nf-link {
-  color: #4f8cff; text-decoration: none; font-size: 13px;
-  padding: 8px 18px; border: 1px solid #2a2e4d; border-radius: 6px;
+  color: var(--accent); text-decoration: none; font-size: 13px;
+  padding: 8px 18px; border: 1px solid var(--border); border-radius: 6px;
   transition: background 0.15s;
 }
-.nf-link:hover { background: #1f2340; }
+.nf-link:hover { background: var(--bg-surface); }
 </style>

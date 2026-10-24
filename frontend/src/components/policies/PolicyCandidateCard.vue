@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * Expandable policy candidate card.
  * Collapsed: summary row (id, event, action, status, risk).
@@ -160,8 +160,8 @@ async function regenerate() {
 
 <style scoped>
 .card {
-  background: #171a2e;
-  border: 1px solid #2a2e4d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 10px;
   overflow: hidden;
@@ -170,42 +170,42 @@ async function regenerate() {
   display: flex; gap: 10px; align-items: center; padding: 10px 14px;
   cursor: pointer; font-size: 12px;
 }
-.card-head:hover { background: #1f2340; }
-.mono { font-family: ui-monospace, Menlo, monospace; }
-.pid { color: #4f8cff; font-size: 11px; font-weight: 600; }
-.evt { color: #8a8fb8; }
-.act { color: #c5c8e4; font-weight: 600; }
-.risk { color: #ffb454; font-weight: 600; }
-.time { margin-left: auto; color: #5a5f8a; font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
-.expand-btn { color: #8a8fb8; font-size: 11px; }
+.card-head:hover { background: var(--bg-surface); }
+.mono { font-family: var(--font-mono); }
+.pid { color: var(--accent); font-size: 11px; font-weight: 600; }
+.evt { color: var(--text-sub); }
+.act { color: var(--text-mid); font-weight: 600; }
+.risk { color: var(--warn); font-weight: 600; }
+.time { margin-left: auto; color: var(--text-dim); font-family: var(--font-mono); font-size: 11px; }
+.expand-btn { color: var(--text-sub); font-size: 11px; }
 
-.card-body { border-top: 1px solid #2a2e4d; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.card-body { border-top: 1px solid var(--border); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .section { display: flex; flex-direction: column; gap: 6px; }
 .section-title {
-  font-size: 11px; color: #8a8fb8; letter-spacing: 0.5px; text-transform: uppercase;
+  font-size: 11px; color: var(--text-sub); letter-spacing: 0.5px; text-transform: uppercase;
   display: flex; justify-content: space-between; align-items: center;
 }
 .pre {
-  background: #141729; border-radius: 4px; padding: 8px 10px;
-  font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #c5c8e4;
+  background: var(--bg-nav); border-radius: 4px; padding: 8px 10px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-mid);
   max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; word-break: break-all;
 }
-.rationale { color: #c5c8e4; font-size: 13px; line-height: 1.6; margin: 0; background: #141729; padding: 8px 10px; border-radius: 4px; border-left: 2px solid #4f8cff; }
+.rationale { color: var(--text-mid); font-size: 13px; line-height: 1.6; margin: 0; background: var(--bg-nav); padding: 8px 10px; border-radius: 4px; border-left: 2px solid var(--accent); }
 .ev-ids { display: flex; flex-wrap: wrap; gap: 6px; }
-.ev-ids code { background: #141729; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-family: ui-monospace, Menlo, monospace; color: #8a8fb8; }
+.ev-ids code { background: var(--bg-nav); padding: 3px 8px; border-radius: 3px; font-size: 11px; font-family: var(--font-mono); color: var(--text-sub); }
 .ev-list { display: flex; flex-direction: column; gap: 8px; }
-.placeholder { color: #5a5f8a; font-style: italic; font-size: 12px; padding: 6px 0; }
+.placeholder { color: var(--text-dim); font-style: italic; font-size: 12px; padding: 6px 0; }
 
-.actions { flex-direction: row; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid #2a2e4d; }
+.actions { flex-direction: row; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid var(--border); }
 .btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: none; font-weight: 500; }
-.btn-approve { background: rgba(41, 195, 139, 0.2); color: #29c38b; border: 1px solid rgba(41, 195, 139, 0.4); }
-.btn-exec   { background: rgba(79, 140, 255, 0.2); color: #4f8cff; border: 1px solid rgba(79, 140, 255, 0.4); }
+.btn-approve { background: rgba(16, 185, 129, 0.2); color: var(--ok); border: 1px solid rgba(16, 185, 129, 0.4); }
+.btn-exec   { background: rgba(52, 120, 246, 0.2); color: var(--accent); border: 1px solid rgba(52, 120, 246, 0.4); }
 .mini-btn {
-  background: transparent; color: #8a8fb8; border: 1px solid #2a2e4d;
+  background: transparent; color: var(--text-sub); border: 1px solid var(--border);
   padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
 }
-.mini-btn:hover { color: #c5c8e4; border-color: #3a3f65; }
+.mini-btn:hover { color: var(--text-mid); border-color: var(--border-strong); }
 .mini-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-.hint { color: #5a5f8a; font-size: 11px; font-style: italic; }
-.err { color: #ff5a5f; font-size: 11px; }
+.hint { color: var(--text-dim); font-size: 11px; font-style: italic; }
+.err { color: var(--err); font-size: 11px; }
 </style>

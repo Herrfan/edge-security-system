@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * Approve or reject a policy that must currently be in NEEDS_APPROVAL state.
  * Calls POST /api/v1/policy-proposal/approve. Backend enforces the state machine;
@@ -101,42 +101,42 @@ function handleDone() {
   display: flex; align-items: center; justify-content: center; z-index: 100;
 }
 .dialog {
-  background: #141729; border: 1px solid #2a2e4d; border-radius: 10px;
+  background: var(--bg-nav); border: 1px solid var(--border); border-radius: 10px;
   min-width: 440px; max-width: 520px; padding: 20px 24px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
-.title { font-size: 15px; font-weight: 600; color: #c5c8e4; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-.mono { font-family: ui-monospace, Menlo, monospace; background: #1f2340; padding: 2px 6px; border-radius: 3px; color: #8a8fb8; font-size: 12px; }
+.title { font-size: 15px; font-weight: 600; color: var(--text-mid); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.mono { font-family: var(--font-mono); background: var(--bg-surface); padding: 2px 6px; border-radius: 3px; color: var(--text-sub); font-size: 12px; }
 .row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .opt {
   display: flex; flex-direction: column; gap: 3px;
   padding: 10px 12px; border-radius: 6px; cursor: pointer;
-  background: #171a2e; border: 1px solid #2a2e4d;
+  background: var(--bg-panel); border: 1px solid var(--border);
 }
-.opt.picked.approve { border-color: rgba(41, 195, 139, 0.6); background: rgba(41, 195, 139, 0.08); }
-.opt.picked.reject  { border-color: rgba(255, 90, 95, 0.6); background: rgba(255, 90, 95, 0.08); }
-.opt-label { font-weight: 600; color: #c5c8e4; }
-.opt-desc { color: #8a8fb8; font-size: 12px; }
+.opt.picked.approve { border-color: rgba(16, 185, 129, 0.6); background: rgba(16, 185, 129, 0.08); }
+.opt.picked.reject  { border-color: rgba(240, 68, 82, 0.6); background: rgba(240, 68, 82, 0.08); }
+.opt-label { font-weight: 600; color: var(--text-mid); }
+.opt-desc { color: var(--text-sub); font-size: 12px; }
 .opt input { display: none; }
 
 .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-.field label { font-size: 11px; color: #8a8fb8; text-transform: uppercase; letter-spacing: 0.5px; }
+.field label { font-size: 11px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
 .field input {
-  background: #171a2e; border: 1px solid #2a2e4d; color: #e4e7f7;
+  background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-hi);
   padding: 7px 10px; border-radius: 5px; font-size: 13px; font-family: inherit;
 }
-.field input:focus { border-color: #4f8cff; outline: none; }
+.field input:focus { border-color: var(--accent); outline: none; }
 
 .result { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 12px; }
-.result.ok  { background: rgba(41, 195, 139, 0.1); color: #29c38b; border: 1px solid rgba(41, 195, 139, 0.3); }
-.result.err { background: rgba(255, 90, 95, 0.1);  color: #ff5a5f; border: 1px solid rgba(255, 90, 95, 0.3); }
+.result.ok  { background: rgba(16, 185, 129, 0.1); color: var(--ok); border: 1px solid rgba(16, 185, 129, 0.3); }
+.result.err { background: rgba(240, 68, 82, 0.1);  color: var(--err); border: 1px solid rgba(240, 68, 82, 0.3); }
 
 .btns { display: flex; gap: 8px; justify-content: flex-end; }
 .btn { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; }
-.btn-cancel { background: #1f2340; color: #8a8fb8; border: 1px solid #2a2e4d; }
-.btn-submit { background: #29c38b; color: #0f1120; font-weight: 600; }
-.btn-close  { background: #4f8cff; color: #fff; font-weight: 600; }
+.btn-cancel { background: var(--bg-surface); color: var(--text-sub); border: 1px solid var(--border); }
+.btn-submit { background: var(--ok); color: var(--bg-root); font-weight: 600; }
+.btn-close  { background: var(--accent); color: #fff; font-weight: 600; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.warn { margin-top: 14px; font-size: 11px; color: #5a5f8a; line-height: 1.5; }
-.warn strong { color: #ffb454; }
+.warn { margin-top: 14px; font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+.warn strong { color: var(--warn); }
 </style>

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 defineProps<{ message: string; detail?: string }>()
 </script>
 
@@ -12,13 +12,13 @@ defineProps<{ message: string; detail?: string }>()
 
 <style scoped>
 .error-banner {
-  background: rgba(255, 90, 95, 0.1);
-  border: 1px solid rgba(255, 90, 95, 0.35);
+  background: rgba(240, 68, 82, 0.1);
+  border: 1px solid rgba(240, 68, 82, 0.35);
   border-radius: 8px;
   padding: 12px 14px;
-  color: #ff8a8f;
+  color: var(--err);
   font-size: 13px;
 }
 .error-head { font-weight: 600; margin-bottom: 4px; }
-.error-detail { font-size: 12px; color: #c5c8e4; font-family: ui-monospace, Menlo, monospace; margin-top: 4px; word-break: break-all; }
+.error-detail { font-size: 12px; color: var(--text-mid); font-family: var(--font-mono); margin-top: 4px; word-break: break-all; }
 </style>

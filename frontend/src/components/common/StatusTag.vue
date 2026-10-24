@@ -1,19 +1,25 @@
 <script setup lang="ts">
+/**
+ * StatusTag — SOC v2 版.
+ * 用纯 CSS 变量色板 (style.css :root tokens), 支持 severity / status / action 三种语义.
+ */
 defineProps<{
   severity?: string
   status?: string
   action?: string
+  size?: 'sm' | 'md'
 }>()
 </script>
 
 <template>
   <span
     class="status-tag"
-    :class="{
-      [`sev-${severity?.toLowerCase()}`]: severity,
-      [`sts-${status?.toLowerCase()}`]: status,
-      [`act-${action?.toLowerCase()}`]: action,
-    }"
+    :class="[
+      { 'size-sm': size === 'sm' },
+      severity && `sev-${severity.toLowerCase()}`,
+      status && `sts-${status.toLowerCase()}`,
+      action && `act-${action.toLowerCase()}`,
+    ]"
   >
     <slot />
   </span>
@@ -21,30 +27,32 @@ defineProps<{
 
 <style scoped>
 .status-tag {
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 4px;
+  display: inline-block;
+  font-size: 11px; padding: 2px 8px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   letter-spacing: 0.3px;
+  line-height: 1.4;
 }
+.size-sm { font-size: 10px; padding: 1px 6px; }
 
-.sev-critical { background: rgba(255, 90, 95, 0.18); color: #ff5a5f; }
-.sev-high     { background: rgba(255, 180, 84, 0.2);  color: #ffb454; }
-.sev-medium   { background: rgba(79, 140, 255, 0.15); color: #4f8cff; }
-.sev-low      { background: rgba(41, 195, 139, 0.15); color: #29c38b; }
-.sev-info     { background: rgba(138, 143, 184, 0.2); color: #8a8fb8; }
+/* === Severity colors === */
+.sev-critical, .sev-critical-high    { background: var(--err-soft);   color: var(--err);   border: 1px solid rgba(240, 68, 82, 0.3); }
+.sev-high                             { background: var(--warn-soft);  color: var(--warn);  border: 1px solid rgba(245, 158, 11, 0.3); }
+.sev-medium                           { background: var(--info-soft);  color: var(--info-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+.sev-low                              { background: var(--ok-soft);    color: var(--ok);    border: 1px solid rgba(16, 185, 129, 0.3); }
+.sev-info                             { background: rgba(100, 116, 139, 0.18); color: var(--text-dim); border: 1px solid rgba(100, 116, 139, 0.3); }
 
-.sts-needs-approval { background: rgba(255, 180, 84, 0.18); color: #ffb454; }
-.sts-approved       { background: rgba(41, 195, 139, 0.15); color: #29c38b; }
-.sts-rejected       { background: rgba(255, 90, 95, 0.18);  color: #ff5a5f; }
-.sts-executed       { background: rgba(79, 140, 255, 0.15); color: #4f8cff; }
-.sts-needs-validation,
-.sts-expired,
-.sts-draft          { background: rgba(138, 143, 184, 0.2); color: #8a8fb8; }
+/* === Policy status colors === */
+.sts-needs-approval                   { background: var(--warn-soft);  color: var(--warn);  border: 1px solid rgba(245, 158, 11, 0.3); }
+.sts-needs-validation                 { background: rgba(100, 116, 139, 0.18); color: var(--text-dim); border: 1px solid rgba(100, 116, 139, 0.3); }
+.sts-approved                         { background: var(--ok-soft);    color: var(--ok);    border: 1px solid rgba(16, 185, 129, 0.3); }
+.sts-rejected                         { background: var(--err-soft);   color: var(--err);   border: 1px solid rgba(240, 68, 82, 0.3); }
+.sts-executed                         { background: var(--accent);     color: #fff; }
+.sts-expired, .sts-draft              { background: rgba(100, 116, 139, 0.18); color: var(--text-dim); border: 1px solid rgba(100, 116, 139, 0.3); }
 
-.act-block-ip,
-.act-block-port,
-.act-rate-limit     { background: rgba(79, 140, 255, 0.15); color: #4f8cff; }
-.act-alert-only     { background: rgba(255, 180, 84, 0.2); color: #ffb454; }
-.act-no-action      { background: rgba(138, 143, 184, 0.2); color: #8a8fb8; }
+/* === Action type colors === */
+.act-block-ip, .act-block-port, .act-rate-limit { background: var(--info-soft); color: var(--info-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+.act-alert-only                                  { background: var(--warn-soft); color: var(--warn); border: 1px solid rgba(245, 158, 11, 0.3); }
+.act-no-action                                   { background: rgba(100, 116, 139, 0.18); color: var(--text-dim); border: 1px solid rgba(100, 116, 139, 0.3); }
 </style>

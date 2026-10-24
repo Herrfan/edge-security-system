@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { health, metricsOverview } from '@/api/metrics'
 import type { HealthInfo, MetricsOverview } from '@/types/api'
@@ -93,35 +93,35 @@ onMounted(load)
 .page { padding: 0; }
 .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .page h2 { font-size: 18px; font-weight: 600; margin: 0 0 4px; }
-.page-sub { font-size: 12px; color: #8a8fb8; margin-bottom: 6px; }
-.page-sub code { font-family: ui-monospace, Menlo, monospace; }
-.page-note { font-size: 12px; color: #ffb454; background: rgba(255, 180, 84, 0.08); padding: 6px 10px; border-radius: 6px; display: inline-block; }
-.page-note code { font-family: ui-monospace, Menlo, monospace; }
+.page-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; }
+.page-sub code { font-family: var(--font-mono); }
+.page-note { font-size: 12px; color: var(--warn); background: rgba(245, 158, 11, 0.08); padding: 6px 10px; border-radius: 6px; display: inline-block; }
+.page-note code { font-family: var(--font-mono); }
 .btn {
-  background: #1f2340; color: #e4e7f7; border: 1px solid #2a2e4d;
+  background: var(--bg-surface); color: var(--text-hi); border: 1px solid var(--border);
   padding: 6px 10px; border-radius: 6px; font-size: 13px; cursor: pointer;
   display: inline-flex; gap: 6px; align-items: center;
 }
 .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-.panel { background: #171a2e; border: 1px solid #2a2e4d; border-radius: 8px; padding: 14px 16px; }
-.panel-title { font-size: 12px; color: #8a8fb8; font-weight: 600; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+.panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.panel-title { font-size: 12px; color: var(--text-sub); font-weight: 600; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
 .kv { display: flex; flex-direction: column; gap: 6px; }
 .kv > div { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-.kv span { color: #8a8fb8; }
-.kv code { font-family: ui-monospace, Menlo, monospace; color: #c5c8e4; font-size: 12px; background: #1f2340; padding: 2px 6px; border-radius: 3px; }
-.kv code.ok { color: #29c38b; }
-.pre { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #c5c8e4; margin: 0; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto; }
+.kv span { color: var(--text-sub); }
+.kv code { font-family: var(--font-mono); color: var(--text-mid); font-size: 12px; background: var(--bg-surface); padding: 2px 6px; border-radius: 3px; }
+.kv code.ok { color: var(--ok); }
+.pre { font-family: var(--font-mono); font-size: 11px; color: var(--text-mid); margin: 0; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow: auto; }
 .safety-panel {
-  background: rgba(255, 180, 84, 0.05);
-  border: 1px solid rgba(255, 180, 84, 0.25);
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.25);
   border-radius: 8px;
   padding: 14px 18px;
 }
-.safety-title { font-size: 13px; font-weight: 600; color: #ffb454; margin-bottom: 10px; }
-.safety-list { margin: 0; padding-left: 18px; font-size: 12px; color: #c5c8e4; line-height: 1.8; }
-.safety-list code { font-family: ui-monospace, Menlo, monospace; background: #1f2340; padding: 1px 5px; border-radius: 3px; color: #ffb454; }
-.center { display: flex; gap: 10px; align-items: center; justify-content: center; padding: 40px; color: #8a8fb8; }
+.safety-title { font-size: 13px; font-weight: 600; color: var(--warn); margin-bottom: 10px; }
+.safety-list { margin: 0; padding-left: 18px; font-size: 12px; color: var(--text-mid); line-height: 1.8; }
+.safety-list code { font-family: var(--font-mono); background: var(--bg-surface); padding: 1px 5px; border-radius: 3px; color: var(--warn); }
+.center { display: flex; gap: 10px; align-items: center; justify-content: center; padding: 40px; color: var(--text-sub); }
 .loading-tip { font-size: 13px; }
 
 /* F6 responsive */

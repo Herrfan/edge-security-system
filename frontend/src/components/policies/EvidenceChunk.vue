@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * Displays a single retrieval evidence chunk as a small card.
  * Used inside PolicyDetailView when showing evidences retrieved for a proposal.
@@ -32,17 +32,17 @@ defineProps<{
 
 <style scoped>
 .evidence {
-  background: #141729;
-  border: 1px solid #2a2e4d;
+  background: var(--bg-nav);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px 12px;
   font-size: 12px;
 }
 .evidence-head { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
-.mono { font-family: ui-monospace, Menlo, monospace; color: #8a8fb8; font-size: 11px; }
-.doc-id { font-family: ui-monospace, Menlo, monospace; color: #5a5f8a; font-size: 11px; }
-.score { margin-left: auto; background: rgba(79, 140, 255, 0.15); color: #4f8cff; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-.evidence-title { color: #c5c8e4; font-weight: 600; margin-bottom: 4px; font-size: 13px; }
-.evidence-content { color: #8a8fb8; line-height: 1.6; max-height: 80px; overflow: hidden; font-size: 12px; white-space: pre-wrap; }
-.evidence-meta { display: flex; gap: 10px; margin-top: 6px; color: #5a5f8a; font-size: 11px; }
+.mono { font-family: var(--font-mono); color: var(--text-sub); font-size: 11px; }
+.doc-id { font-family: var(--font-mono); color: var(--text-dim); font-size: 11px; }
+.score { margin-left: auto; background: rgba(52, 120, 246, 0.15); color: var(--accent); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.evidence-title { color: var(--text-mid); font-weight: 600; margin-bottom: 4px; font-size: 13px; }
+.evidence-content { color: var(--text-sub); line-height: 1.6; max-height: 80px; overflow: hidden; font-size: 12px; white-space: pre-wrap; }
+.evidence-meta { display: flex; gap: 10px; margin-top: 6px; color: var(--text-dim); font-size: 11px; }
 </style>

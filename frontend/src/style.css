@@ -1,28 +1,73 @@
-/* Edge Security System — F1 dark theme global styles
-   Mirrors the design tokens used in static/style.css (Phase 15) +
-   scoped component styles across layouts/views. */
+/* Edge Security System — SOC dark design tokens + global resets
+   v2.0 — redesigned to SOC 深蓝 (deep navy) palette
+   F1 — applied to all layouts and shared components
+*/
 
 :root {
-  --bg-root:    #0f1120;
-  --bg-panel:   #141729;
-  --bg-card:    #171a2e;
-  --bg-hover:   #1f2340;
-  --border:     #2a2e4d;
+  /* === Deep Navy SOC Palette === */
+  --bg-root:      #070D1A;   /* 全局主背景 */
+  --bg-nav:       #0B1630;   /* 导航/顶部背景 */
+  --bg-panel:     #0D1930;   /* 卡片内容面板 */
+  --bg-surface:   #10213D;   /* 悬停/选中/次级表面 */
+  --bg-hover:     #152847;   /* 更深的悬停 */
+  --border:       #1E3A5F;   /* 卡片与分隔线 */
+  --border-strong:#2A4A78;   /* 选中态边框 */
 
-  --text-hi:    #e4e7f7;
-  --text-mid:   #c5c8e4;
-  --text-sub:   #8a8fb8;
-  --text-dim:   #5a5f8a;
+  /* === Text === */
+  --text-hi:      #E8F0FF;   /* 主文本 */
+  --text-mid:     #C5D4E8;   /* 次级文本 */
+  --text-sub:     #9CB0D0;   /* 辅助说明 */
+  --text-dim:     #6B7F9E;   /* 禁用/未接入 */
 
-  --accent:     #4f8cff;
-  --ok:         #29c38b;
-  --warn:       #ffb454;
-  --err:        #ff5a5f;
+  /* === Accent & Semantic === */
+  --accent:       #3478F6;   /* 主操作蓝 */
+  --accent-hover: #4A8EFF;
+  --cyan:         #22C7D6;   /* 辅助青色/正常状态 */
+  --cyan-soft:    rgba(34, 199, 214, 0.12);
+  --ok:           #10B981;   /* 成功 */
+  --ok-soft:      rgba(16, 185, 129, 0.14);
+  --warn:         #F59E0B;   /* 中风险/待处理 */
+  --warn-soft:    rgba(245, 158, 11, 0.14);
+  --err:          #F04452;   /* 严重/高危 */
+  --err-soft:     rgba(240, 68, 82, 0.14);
+  --info-blue:    #3B82F6;   /* 低风险/信息 */
+  --info-soft:    rgba(59, 130, 246, 0.14);
+  --disabled:     #64748B;   /* 禁用/未接入 */
 
-  --mono:       ui-monospace, Menlo, Consolas, monospace;
-  --sans:       system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* === Typography === */
+  --font-sans: system-ui, 'Segoe UI', 'PingFang SC', Roboto, sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, 'JetBrains Mono', monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-lg: 15px;
+  --fs-xl: 16px;
+  --fs-2xl: 18px;
+  --fs-3xl: 24px;
+  --fs-kpi: 28px;
+
+  /* === Spacing === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* === Radius & Shadows === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  /* === Layout === */
+  --sidebar-w: 220px;
+  --topbar-h: 52px;
 }
 
+/* === Reset === */
 *,
 *::before,
 *::after { box-sizing: border-box; }
@@ -31,9 +76,9 @@ html, body, #app {
   margin: 0; padding: 0; height: 100%;
   background: var(--bg-root);
   color: var(--text-hi);
-  font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-synthesis: none;
@@ -41,68 +86,68 @@ html, body, #app {
 
 body { overflow: hidden; }
 
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a { color: var(--accent); text-decoration: none; transition: color 0.15s; }
+a:hover { color: var(--accent-hover); }
 
-code {
-  font-family: var(--mono);
-  background: var(--bg-hover);
+code, pre {
+  font-family: var(--font-mono);
+  background: var(--bg-surface);
   color: var(--text-mid);
   padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
 }
-
-pre { margin: 0; font-family: var(--mono); }
+pre { margin: 0; padding: 8px 10px; overflow: auto; }
 
 button {
   font-family: inherit;
   cursor: pointer;
   border: none;
   background: none;
+  color: inherit;
 }
+button:disabled { cursor: not-allowed; }
 
 select, input {
   font-family: inherit;
   outline: none;
+  color: inherit;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: var(--fs-sm);
+  transition: border-color 0.15s;
 }
+select:focus, input:focus { border-color: var(--accent); }
 
-/* Scrollbars — subtle dark chrome */
-::-webkit-scrollbar { width: 8px; height: 8px; }
+table { border-collapse: collapse; }
+
+/* Scrollbars — subtle deep navy chrome */
+::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #2a2e4d; border-radius: 4px;
+  background: #1E3A5F; border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover { background: #3a3f65; }
+::-webkit-scrollbar-thumb:hover { background: #2A4A78; }
 
-/* === F6 — Accessibility & Responsive === */
-
-/* Keyboard focus outline — always visible for tab nav, hidden for mouse click */
+/* === Accessibility === */
 *:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
-}
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  border-radius: 3px;
 }
 
-/* Global skip-link pattern — focus trap avoids header when keyboard navigating */
 a.skip-link {
   position: absolute; left: -9999px; top: -9999px;
 }
 a.skip-link:focus { left: 8px; top: 8px; z-index: 999; }
 
-/* Responsive: unlock body scroll on mobile (TopBar/Sidebar may overflow) */
+/* === Responsive === */
 @media (max-width: 768px) {
   body { overflow: auto; }
 }
 
-/* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

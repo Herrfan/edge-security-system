@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, ref } from 'vue'
 
 const props = withDefaults(
@@ -49,18 +49,18 @@ const bodyLines = computed(() => (props.body ?? '').split('\n').filter(Boolean))
   z-index: 1000;
 }
 .dialog {
-  background: #171a2e; border: 1px solid #2a2e4d; border-radius: 10px;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
   padding: 20px 22px; min-width: 320px; max-width: 460px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
-.dialog.danger { border-color: rgba(255, 90, 95, 0.4); }
-.title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #e4e7f7; }
-.body { font-size: 13px; color: #c5c8e4; line-height: 1.6; margin-bottom: 14px; }
+.dialog.danger { border-color: rgba(240, 68, 82, 0.4); }
+.title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-hi); }
+.body { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-bottom: 14px; }
 .body p { margin: 0 0 6px; }
 .actions { display: flex; justify-content: flex-end; gap: 10px; }
-.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; border: 1px solid #2a2e4d; cursor: pointer; }
-.btn.cancel { background: #1f2340; color: #e4e7f7; }
-.btn.confirm { background: #4f8cff; color: #fff; border-color: #4f8cff; }
-.btn.confirm.danger { background: #ff5a5f; border-color: #ff5a5f; }
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; border: 1px solid var(--border); cursor: pointer; }
+.btn.cancel { background: var(--bg-surface); color: var(--text-hi); }
+.btn.confirm { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.confirm.danger { background: var(--err); border-color: var(--err); }
 .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 </style>

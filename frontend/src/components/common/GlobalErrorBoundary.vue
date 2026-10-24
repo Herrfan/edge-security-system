@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
  * GlobalErrorBoundary — Phase F6.
  *
@@ -58,13 +58,13 @@ onBeforeUnmount(() => { if (timer) clearInterval(timer) })
 <style scoped>
 .banner {
   position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
-  background: rgba(255, 90, 95, 0.95);
+  background: rgba(240, 68, 82, 0.95);
   backdrop-filter: blur(8px);
-  border-bottom: 2px solid #ff5a5f;
+  border-bottom: 2px solid var(--err);
   color: #fff;
   padding: 10px 18px;
   display: flex; gap: 14px; align-items: center;
-  box-shadow: 0 4px 20px rgba(255, 90, 95, 0.4);
+  box-shadow: 0 4px 20px rgba(240, 68, 82, 0.4);
 }
 .bb-icon { font-size: 26px; }
 .bb-body { flex: 1; min-width: 0; }

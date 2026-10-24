@@ -1,45 +1,49 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 /**
- * Event Trend Line Chart — Phase F3 Dashboard.
- *
- * Buckets events by created_at hour, plotted as event counts over time.
- * Derived client-side from listEvents({limit}) results — NO backend trend API.
- * Explicitly labeled "前端推导 · 时间范围=当前返回的事件集".
- *
- * echarts modular tree-shake import — LineChart + Grid + Tooltip + AreaStyle via LineChart.
+ * Event Trend Line Chart — SOC v2 版.
+ * 改为多系列（按 severity 分 CRITICAL/HIGH/MEDIUM/LOW 4 条线），
+ * SOC 深蓝配色。bucketing 事件 created_at → 小时桶。
+ * 来自 client-side events — 标注"前端推导 · 时间范围=当前返回集".
  */
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { use } from 'echarts/core'
 import { LineChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent } from 'echarts/components'
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import * as echarts from 'echarts/core'
-import type { SecurityEvent } from '@/types/api'
+import type { SecurityEvent, Severity } from '@/types/api'
 
-use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
+use([LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
 const props = defineProps<{ events: SecurityEvent[] }>()
 
-/** "YYYY-MM-DD HH" bucket key (UTC) */
-function hourBucket(iso: string): string {
-  return iso.slice(0, 13).replace('T', ' ')
-}
+const SERIES: { sev: Severity; name: string; color: string }[] = [
+  { sev: 'CRITICAL', name: '严重', color: '#F04452' },
+  { sev: 'HIGH',     name: '高危', color: '#F59E0B' },
+  { sev: 'MEDIUM',   name: '中危', color: '#3478F6' },
+  { sev: 'LOW',      name: '低危', color: '#10B981' },
+]
 
-const buckets = computed(() => {
-  if (!props.events.length) return { keys: [] as string[], values: [] as number[] }
-  const m = new Map<string, number>()
+/** "YYYY-MM-DD HH" bucket key */
+function hourBucket(iso: string): string { return iso.slice(0, 13).replace('T', ' ') }
+
+const trendData = computed(() => {
+  if (!props.events.length) return { keys: [] as string[], series: [] as number[][] }
+  const m = new Map<string, Record<string, number>>()
   for (const e of props.events) {
     if (!e.created_at) continue
     const k = hourBucket(e.created_at)
-    m.set(k, (m.get(k) || 0) + 1)
+    if (!m.has(k)) m.set(k, {})
+    const bucket = m.get(k)!
+    bucket[e.severity] = (bucket[e.severity] || 0) + 1
   }
   const keys = [...m.keys()].sort()
-  const values = keys.map((k) => m.get(k) || 0)
-  return { keys, values }
+  const series = SERIES.map(({ sev }) => keys.map((k) => m.get(k)?.[sev] || 0))
+  return { keys, series }
 })
 
 const needsData = computed(() => props.events.length === 0)
-const tooFew = computed(() => buckets.value.keys.length < 2)
+const tooFewPoints = computed(() => trendData.value.keys.length < 2)
 
 const chartRef = ref<HTMLElement | null>(null)
 let inst: echarts.ECharts | null = null
@@ -48,40 +52,47 @@ function resize() { inst?.resize() }
 
 function render() {
   if (!inst) return
-  const { keys, values } = buckets.value
+  const { keys, series } = trendData.value
   inst.setOption({
-    tooltip: { trigger: 'axis', backgroundColor: '#1f2340', borderColor: '#2a2e4d', textStyle: { color: '#e4e7f7', fontSize: 12 } },
-    grid: { top: 10, right: 16, bottom: 30, left: 40 },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#0D1930', borderColor: '#1E3A5F',
+      textStyle: { color: '#E8F0FF', fontSize: 12 },
+      axisPointer: { lineStyle: { color: '#3478F6', type: 'dashed' } },
+    },
+    legend: {
+      data: SERIES.map((s) => s.name),
+      top: 0, right: 0,
+      itemWidth: 12, itemHeight: 8, itemGap: 14,
+      textStyle: { color: '#9CB0D0', fontSize: 11 },
+    },
+    grid: { top: 32, right: 12, bottom: 28, left: 36 },
     xAxis: {
-      type: 'category',
+      type: 'category', boundaryGap: false,
       data: keys.map((k) => k.slice(-2) + ':00'),
-      axisLine: { lineStyle: { color: '#2a2e4d' } },
-      axisLabel: { color: '#8a8fb8', fontSize: 10, interval: 0 },
+      axisLine: { lineStyle: { color: '#1E3A5F' } },
+      axisLabel: { color: '#9CB0D0', fontSize: 10, interval: 0 },
+      axisTick: { show: false },
     },
     yAxis: {
-      type: 'value',
-      axisLine: { show: false },
-      splitLine: { lineStyle: { color: '#1f2340' } },
-      axisLabel: { color: '#8a8fb8', fontSize: 11 },
+      type: 'value', minInterval: 1,
+      axisLine: { show: false }, axisTick: { show: false },
+      splitLine: { lineStyle: { color: 'var(--bg-hover)', type: 'dashed' } },
+      axisLabel: { color: '#9CB0D0', fontSize: 11 },
     },
-    series: [{
-      type: 'line',
-      data: values,
-      smooth: true,
-      symbol: 'circle',
-      symbolSize: 6,
-      lineStyle: { color: '#4f8cff', width: 2 },
-      itemStyle: { color: '#4f8cff' },
-      areaStyle: {
-        color: {
-          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: 'rgba(79, 140, 255, 0.45)' },
-            { offset: 1, color: 'rgba(79, 140, 255, 0.02)' },
-          ],
-        },
-      },
-    }],
+    series: SERIES.map(({ name, color }, i) => ({
+      name, type: 'line', stack: 'all',
+      smooth: true, symbol: 'circle', symbolSize: 4,
+      lineStyle: { color, width: 2 },
+      itemStyle: { color },
+      areaStyle: i === SERIES.length - 1
+        ? { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(52, 120, 246, 0.25)' },
+            { offset: 1, color: 'rgba(52, 120, 246, 0.01)' },
+          ]) }
+        : undefined,
+      data: series[i],
+    })),
   }, true)
 }
 
@@ -93,29 +104,37 @@ onMounted(async () => {
     window.addEventListener('resize', resize)
   }
 })
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', resize)
-  inst?.dispose()
-})
+onBeforeUnmount(() => { window.removeEventListener('resize', resize); inst?.dispose() })
 watch(() => props.events, () => render(), { deep: true })
 </script>
 
 <template>
-  <div class="chart-wrap">
-    <div class="chart-head">
-      <span class="chart-title">事件时间趋势 (按小时)</span>
-      <span class="derived-tag">前端推导 · 时间范围={{ events.length ? hourBucket(events[events.length-1].created_at || '') + '…' + hourBucket(events[0].created_at || '') : '—' }}</span>
+  <div class="card">
+    <div class="head">
+      <span class="title">威胁趋势分析</span>
+      <span class="badge">前端推导 · 时间范围={{ trendData.keys.length ? trendData.keys[0].slice(-5) : '—' }}…{{ trendData.keys.length ? trendData.keys[trendData.keys.length-1].slice(-5) : '—' }}</span>
     </div>
     <div v-if="needsData" class="empty">暂无事件数据</div>
-    <div v-else-if="tooFew" class="empty">事件时间点不足 2 小时 (仅 {{ buckets.keys.length }} 个)，无法绘制趋势</div>
-    <div v-else ref="chartRef" style="height: 260px; width: 100%" />
+    <div v-else-if="tooFewPoints" class="empty">事件采样时间点不足 2 小时，无法绘制趋势</div>
+    <div v-else ref="chartRef" class="chart" />
   </div>
 </template>
 
 <style scoped>
-.chart-wrap { background: #11132a; border-radius: 10px; border: 1px solid #2a2e4d; padding: 12px 14px; }
-.chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.chart-title { font-size: 13px; font-weight: 600; color: #e4e7f7; letter-spacing: 0.3px; }
-.derived-tag { font-size: 10px; color: #8a8fb8; background: #1f2340; padding: 2px 6px; border-radius: 4px; border: 1px solid #2a2e4d; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.empty { height: 260px; display: flex; align-items: center; justify-content: center; color: #8a8fb8; font-size: 13px; text-align: center; padding: 0 16px; }
+.card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex; flex-direction: column;
+}
+.head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.title { font-size: var(--fs-xl); font-weight: 600; color: var(--text-hi); letter-spacing: 0.3px; }
+.badge {
+  font-size: var(--fs-xs); color: var(--text-sub);
+  background: var(--bg-surface); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: var(--radius-sm);
+}
+.chart { height: 240px; width: 100%; }
+.empty { height: 240px; display: flex; align-items: center; justify-content: center; color: var(--text-sub); font-size: var(--fs-sm); text-align: center; padding: 0 var(--space-4); }
 </style>
