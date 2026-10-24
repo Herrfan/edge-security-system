@@ -7,7 +7,7 @@ import PolicyWorkbenchView from '@/views/PolicyWorkbenchView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import TrafficAnalysisView from '@/views/TrafficAnalysisView.vue'
 import EvaluationView from '@/views/EvaluationView.vue'
-import PlaceholderView from '@/views/PlaceholderView.vue'
+import AuditView from '@/views/AuditView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
 // Hash history so the SPA works whether served at / (prod FastAPI mount)
@@ -26,7 +26,7 @@ export default createRouter({
         { path: 'knowledge',  name: 'knowledge',  component: KnowledgeBaseView },
         { path: 'policies',   name: 'policies',   component: PolicyWorkbenchView },
         { path: 'evaluation', name: 'evaluation', component: EvaluationView },
-        { path: 'audit',      name: 'audit',      component: PlaceholderView, props: { kind: 'blocked', title: '审计日志', hint: '后端审计日志查询 API 尚未实现（ExecutionRecord 有 trace_id 但没审计 endpoint）' } },
+        { path: 'audit',      name: 'audit',      component: AuditView },
         { path: 'settings',   name: 'settings',   component: SettingsView },
       ],
     },
