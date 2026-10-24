@@ -17,6 +17,7 @@ import { listProposals } from '@/api/policies'
 import RiskDistributionChart from '@/components/charts/RiskDistributionChart.vue'
 import EventTrendChart from '@/components/charts/EventTrendChart.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import DataSourceBadge from '@/components/common/DataSourceBadge.vue'
 import type { MetricsOverview, SecurityEvent, PolicyProposal } from '@/types/api'
 
 function fmtInt(v: any): string {
@@ -57,6 +58,11 @@ const infoSeries = () => overview.value!.metrics['edgy_info']?.series?.[0] ?? nu
 
 <template>
   <div class="dash">
+    <!-- Data source badge (F6) -->
+    <div class="ds-row">
+      <DataSourceBadge kind="live" />
+      <span class="ds-label">数据源：<code>/metrics/overview</code> + <code>/events</code> + <code>/policy-proposals</code> · 图表为前端推导</span>
+    </div>
     <!-- Top config strip: edgy_info series + config block -->
     <section v-if="overview" class="cfg-strip">
       <div class="cfg-cell">
@@ -174,6 +180,8 @@ const infoSeries = () => overview.value!.metrics['edgy_info']?.series?.[0] ?? nu
 
 <style scoped>
 .dash { display: flex; flex-direction: column; gap: 16px; padding: 0; }
+.ds-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #8a8fb8; }
+.ds-row code { background: #1f2340; padding: 1px 5px; border-radius: 3px; color: #4f8cff; font-family: ui-monospace, Consolas, monospace; font-size: 11px; }
 .cfg-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .cfg-cell { background: #11132a; border: 1px solid #2a2e4d; border-radius: 10px; padding: 10px 14px; }
 .cfg-lbl { font-size: 10px; text-transform: uppercase; color: #8a8fb8; letter-spacing: 1.2px; margin-bottom: 2px; }
@@ -209,4 +217,23 @@ const infoSeries = () => overview.value!.metrics['edgy_info']?.series?.[0] ?? nu
 .empty-mini { padding: 30px 0; text-align: center; color: #8a8fb8; font-size: 13px; }
 .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 9, 21, 0.8); z-index: 100; color: #e4e7f7; }
 .overlay.err { color: #ff5a5f; }
+
+/* === F6 responsive === */
+@media (max-width: 1024px) {
+  .metric-row { grid-template-columns: repeat(3, 1fr); }
+  .cfg-strip { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .metric-row { grid-template-columns: repeat(2, 1fr); }
+  .cfg-strip { grid-template-columns: 1fr 1fr; }
+  .charts-row { grid-template-columns: 1fr; }
+  .tables-row { grid-template-columns: 1fr; }
+  .m-value { font-size: 18px; }
+}
+@media (max-width: 480px) {
+  .metric-row { grid-template-columns: 1fr 1fr; }
+  .cfg-strip { grid-template-columns: 1fr; }
+  .m-value { font-size: 16px; }
+  .desc { max-width: 160px; }
+}
 </style>

@@ -159,4 +159,14 @@ import DataSourceBadge from '@/components/common/DataSourceBadge.vue'
 .status-no { color: #ff5a5f; font-weight: 600; background: rgba(255, 90, 95, 0.12); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
 .status-ok { color: #29c38b; font-weight: 600; background: rgba(41, 195, 139, 0.12); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
 .mono { font-family: ui-monospace, Consolas, monospace; color: #8a8fb8; font-size: 11px; }
+
+/* F6 responsive */
+@media (max-width: 768px) {
+  .planned-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .planned-grid { grid-template-columns: 1fr; }
+  .gap-table { font-size: 11px; }
+  .gap-table td, .gap-table th { padding: 6px; }
+}
 </style>

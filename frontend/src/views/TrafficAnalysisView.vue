@@ -19,6 +19,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { importFlows } from '@/api/traffic'
+import DataSourceBadge from '@/components/common/DataSourceBadge.vue'
 import type { IngestionSummary } from '@/types/api'
 
 const router = useRouter()
@@ -52,7 +53,10 @@ function gotoEvents() { router.push('/events') }
 
 <template>
   <div class="traffic">
-    <h2 class="title">流量分析 — 文件导入</h2>
+    <div class="page-head">
+      <h2 class="title">流量分析 — 文件导入</h2>
+      <DataSourceBadge kind="live" />
+    </div>
     <p class="hint">
       上传 CSV / JSONL flow 文件，后端将解析并写入 FlowRecord 存储。
       支持文件扩展名：<code>.csv</code>, <code>.jsonl</code>, <code>.json</code>。
@@ -142,6 +146,7 @@ function gotoEvents() { router.push('/events') }
 
 <style scoped>
 .traffic { display: flex; flex-direction: column; gap: 14px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .title { margin: 0; font-size: 18px; font-weight: 700; color: #e4e7f7; }
 .hint { margin: 0; color: #8a8fb8; font-size: 13px; }
 .hint code { background: #1f2340; padding: 1px 5px; border-radius: 3px; color: #4f8cff; font-size: 12px; }
@@ -184,4 +189,16 @@ function gotoEvents() { router.push('/events') }
 .info-title { font-size: 13px; font-weight: 600; color: #e4e7f7; margin-bottom: 8px; }
 .info-list { margin: 0; padding-left: 20px; color: #a9aed0; font-size: 12px; line-height: 1.7; }
 .info-list code { background: #1f2340; padding: 1px 5px; border-radius: 3px; color: #4f8cff; }
+
+/* F6 responsive */
+@media (max-width: 768px) {
+  .sum-grid { grid-template-columns: repeat(2, 1fr); }
+  .sum-cell.span-3 { grid-column: span 2; }
+  .file-name { max-width: 260px; }
+}
+@media (max-width: 480px) {
+  .sum-grid { grid-template-columns: 1fr; }
+  .sum-cell.span-3 { grid-column: span 1; }
+  .btn-upload, .btn-primary { width: 100%; }
+}
 </style>

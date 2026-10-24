@@ -5,10 +5,11 @@ import Sidebar from './Sidebar.vue'
 
 <template>
   <div class="layout">
+    <a href="#main-content" class="skip-link">跳过导航</a>
     <TopBar />
     <div class="body">
       <Sidebar />
-      <main class="content">
+      <main id="main-content" class="content" tabindex="-1">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
@@ -25,4 +26,9 @@ import Sidebar from './Sidebar.vue'
 .content { flex: 1; padding: 24px; overflow: auto; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* F6 responsive — sidebar collapses on narrow viewports */
+@media (max-width: 768px) {
+  .content { padding: 16px; }
+}
 </style>

@@ -140,4 +140,15 @@ import DataSourceBadge from '@/components/common/DataSourceBadge.vue'
 .pc-icon { font-size: 20px; margin-bottom: 4px; }
 .pc-title { font-size: 12px; font-weight: 700; color: #e4e7f7; margin-bottom: 4px; }
 .pc-desc { font-size: 11px; color: #8a8fb8; line-height: 1.6; }
+
+/* F6 responsive */
+@media (max-width: 768px) {
+  .planned-grid { grid-template-columns: repeat(2, 1fr); }
+  .infra-table { font-size: 11px; }
+}
+@media (max-width: 480px) {
+  .planned-grid { grid-template-columns: 1fr; }
+  .infra-table td, .infra-table th { padding: 5px 6px; }
+  .model-cell { display: none; }
+}
 </style>

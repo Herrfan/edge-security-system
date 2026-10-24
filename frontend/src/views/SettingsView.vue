@@ -123,4 +123,10 @@ onMounted(load)
 .safety-list code { font-family: ui-monospace, Menlo, monospace; background: #1f2340; padding: 1px 5px; border-radius: 3px; color: #ffb454; }
 .center { display: flex; gap: 10px; align-items: center; justify-content: center; padding: 40px; color: #8a8fb8; }
 .loading-tip { font-size: 13px; }
+
+/* F6 responsive */
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+  .page-head { flex-direction: column; align-items: stretch; }
+}
 </style>
