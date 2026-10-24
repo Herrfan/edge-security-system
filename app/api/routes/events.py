@@ -102,6 +102,9 @@ async def events_seed_default(body: SeedDefaultBody, session: AsyncSession = Dep
     """
     from pathlib import Path
 
+    from app.services.detection import get_detector
+    from app.services.ingestion import iter_records
+
     repo_root = Path(__file__).resolve().parents[3]
     csv_path = repo_root / "data" / "samples" / "flows_sample.csv"
     if not csv_path.exists():
