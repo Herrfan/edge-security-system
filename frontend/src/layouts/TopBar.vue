@@ -46,7 +46,6 @@ function fmtTime(d: Date) {
       <span class="brand-icon">🛡️</span>
       <div class="brand-text">
         <h1>边缘网络安全态势感知与自适应防御系统</h1>
-        <span class="sub">SOC · Edge Security</span>
       </div>
     </div>
 

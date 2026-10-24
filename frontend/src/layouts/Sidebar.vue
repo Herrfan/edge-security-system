@@ -42,15 +42,6 @@ const items = computed<NavItem[]>(() => [
 
 <template>
   <aside class="sidebar">
-    <!-- Logo area -->
-    <div class="logo-block">
-      <div class="logo-icon">🛡️</div>
-      <div class="logo-info">
-        <div class="logo-title">EdgeSOC</div>
-        <div class="logo-sub">边缘安全中心</div>
-      </div>
-    </div>
-
     <!-- Section: 核心监控 -->
     <div class="nav-section">
       <div class="section-label">核心监控</div>
@@ -127,25 +118,6 @@ const items = computed<NavItem[]>(() => [
   overflow-y: auto;
 }
 
-/* Logo */
-.logo-block {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: 0 var(--space-4) var(--space-4);
-  margin-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border);
-}
-.logo-icon {
-  font-size: 20px;
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(52, 120, 246, 0.15);
-  border: 1px solid rgba(52, 120, 246, 0.4);
-  border-radius: var(--radius-md);
-}
-.logo-info { line-height: 1.2; }
-.logo-title { font-size: 15px; font-weight: 700; color: var(--text-hi); letter-spacing: 0.5px; }
-.logo-sub { font-size: 10px; color: var(--text-sub); }
-
 /* Section labels */
 .nav-section { margin-bottom: var(--space-1); }
 .section-label {
@@ -216,8 +188,7 @@ const items = computed<NavItem[]>(() => [
 
 @media (max-width: 768px) {
   .sidebar { width: 64px; padding: var(--space-2) 0; }
-  .logo-block { padding: 0 var(--space-2) var(--space-3); }
-  .logo-info, .section-label, .label, .edge-node .node-label, .edge-node .node-count { display: none; }
+  .section-label, .label, .edge-node .node-label, .edge-node .node-count { display: none; }
   .nav-item { justify-content: center; padding: 10px; }
   .icon { width: auto; }
   .safety-card, .edge-node { display: none; }
