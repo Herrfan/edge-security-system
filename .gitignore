@@ -38,6 +38,7 @@ data/samples/*.pcap
 !data/samples/flows_sample.csv
 data/demo_report.json
 data/benchmark_report.json
+data/uploads/
 
 # Models
 models/*.bin
